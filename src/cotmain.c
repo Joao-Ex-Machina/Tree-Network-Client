@@ -1,5 +1,6 @@
 #include "main.h"
 #include "tcp.h"
+#include "io.h"
 
 int main (int argc, char *argv[]){
   ssize_t n;
@@ -46,10 +47,10 @@ setTCP_server (tcp_port, fd, errcode, n, addrlen, hints, res, addr, buffer);
       counter =select (maxfd + 1, &rfds, (fd_set *) NULL, (fd_set *) NULL,(struct timeval *) NULL);
       if (counter <= 0)
 	/*error */ exit (1);
-      for (; counter; --counter)
+      for (; counter; --counter){
 	switch (state){
 	  case idle:
-	    if (FD_ISSET (fd, &rfds)){
+	    if (FD_ISSET (fd, &rfds)&& fd!=0){
 		FD_CLR (fd, &rfds);
 		addrlen = sizeof (addr);
 		if ((newfd = accept (fd, &addr, &addrlen)) == -1)
@@ -57,16 +58,21 @@ setTCP_server (tcp_port, fd, errcode, n, addrlen, hints, res, addr, buffer);
 		afd = newfd;
 		state = busy;
 	      }
+	    else if (FD_ISSET (fd, &rfds)&& fd==0){
+			fgets(buffer, 128 , stdin);
+			proc_stdin(buffer);
+			//state=busy;
+	    }
 	    break;
 	  case busy:
-	    if (FD_ISSET (fd, &rfds)){
+	    if (FD_ISSET (fd, &rfds)&& fd !=0 ){
 		FD_CLR (fd, &rfds);
 		addrlen = sizeof (addr);
 		if ((newfd = accept (fd, &addr, &addrlen)) == -1)
 		  /*error */ exit (1);
 		close (newfd);
 	      }
-	    else if (FD_ISSET (afd, &rfds)){
+	    else if (FD_ISSET (afd, &rfds) && fd != 0){
 		FD_CLR (afd, &rfds);
 		if ((n = read (afd, buffer, 128)) != 0){
 		    if (n == -1)
@@ -79,9 +85,11 @@ setTCP_server (tcp_port, fd, errcode, n, addrlen, hints, res, addr, buffer);
 		}		//connection closed by peer
 	      }
 	    break;
-	  }			//switch(state)
-  	}				//while(1)
+	  }//switch(state)	
+  	}
+  }//while(1)
    	freeaddrinfo(res);
    	close(fd);
+	printf("end");
 	return 0;
 }
