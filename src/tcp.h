@@ -9,9 +9,10 @@
 #include <netdb.h>
 #include <stdio.h>
 #include <string.h>
+#include "netstruct.h"
 typedef struct sockaddr_in sockaddr_in;
 typedef struct addrinfo addrinfo;
-void setTCP_server(char* tcp_port,int fd,int errcode,ssize_t n, socklen_t addrlen,addrinfo hints,addrinfo *res, sockaddr_in addr,char* buffer);
+int setTCP_server(char* tcp_port,int fd,int errcode,ssize_t n, socklen_t addrlen,addrinfo hints,addrinfo *res, sockaddr_in addr,char* buffer);
 void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP);
 #endif
 

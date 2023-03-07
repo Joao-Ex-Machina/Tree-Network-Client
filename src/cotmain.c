@@ -1,8 +1,12 @@
 #include "main.h"
 #include "tcp.h"
 #include "io.h"
+#include "netstruct.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 int main (int argc, char *argv[]){
+  struct netnode *host=NULL, *aux=NULL;
   ssize_t n;
   socklen_t addrlen;
   struct addrinfo hints, *res;
@@ -13,8 +17,11 @@ int main (int argc, char *argv[]){
   enum{ idle, busy } state;
   int maxfd, counter;
 //      int regIP = [193,136,138,142];
-  char *regUDP = "59000";
-  char *tcp_port = "58001";
+  char regUDP[6] = "59000";
+  char regIP[16]="193.136.138.142";
+  char tcp_port[6] = "58001";
+  char IP[16]= "1.1.1.1";
+
 /*	if( argc < 3 || argc > 5){
         	printf("Por favor verifique se usou todos os dados necessários e tente outra vez.\n");
         	exit(EXIT_FAILURE);
@@ -27,11 +34,16 @@ int main (int argc, char *argv[]){
         	regIP =  inet_aton(argv[3]);
 		if (argc == 5)
         		regUDP =  strtol(argv[4], NULL, 10);
-    	}
+i    	}
 */
-setTCP_server (tcp_port, fd, errcode, n, addrlen, hints, res, addr, buffer);
+host=(netnode*)malloc(sizeof(netnode));
 
-  while (1){
+host->TCPsocket=setTCP_server(tcp_port, fd, errcode, n, addrlen, hints, res, addr, buffer);
+aux=host;
+//host->UDPsocket=setUDP_server;
+
+while (1){
+	/*tenho que dar fix disto*/
       FD_ZERO (&rfds);
       switch (state){
 	case idle:
@@ -47,23 +59,53 @@ setTCP_server (tcp_port, fd, errcode, n, addrlen, hints, res, addr, buffer);
       counter =select (maxfd + 1, &rfds, (fd_set *) NULL, (fd_set *) NULL,(struct timeval *) NULL);
       if (counter <= 0)
 	/*error */ exit (1);
-      for (; counter; --counter){
+
+      while(counter>0){
 	switch (state){
 	  case idle:
-	    if (FD_ISSET (fd, &rfds)&& fd!=0){
-		FD_CLR (fd, &rfds);
+	    if (FD_ISSET (host->TCPsocket, &rfds)){
+		FD_CLR (host->TCPsocket, &rfds);
 		addrlen = sizeof (addr);
-		if ((newfd = accept (fd, &addr, &addrlen)) == -1)
+		if ((newfd = accept (host->TCPsocket, &addr, &addrlen)) == -1)
 		  /*error */ exit (1);
+		fgets(buffer,128,newfd);
+
+		/* A FAZER Processar mensagem de tipo NEW*/
+		/*idk man maybe meter o Jorge a fazer isto*/
+
+		if(aux->interns==NULL){
+			aux->intern=(entry*)malloc(sizeof(entry));
+		}
+		else{
+			while(aux->interns->brother!=NULL){
+				aux->interns=aux->interns->brother;
+
+			}
+
+			aux->interns->brother=(entry*)malloc(sizeof(entry));
+			aux->interns=aux->interns->brother;
+		}
+
+		aux->interns->IP=;
+		aux->interns->id=;
+		aux->interns->TCPport=;
+		aux->interns->fd=newfd; /*Passar por referência*/
+		aux=host;
+		/* Caso host->backup.id == host->self.id*/
+		/*Copiar estes aux->interns todos para o backup*/
+
+		fprintf(newfd, "EXTERN \s \s \s\n", host->external.id, host->external.IP, host->external.TCPport);
 		afd = newfd;
 		state = busy;
 	      }
-	    else if (FD_ISSET (fd, &rfds)&& fd==0){
+	    else if (FD_ISSET (0, &rfds)){
 			fgets(buffer, 128 , stdin);
 			proc_stdin(buffer);
 			//state=busy;
 	    }
+
 	    break;
+	    /*e dar fix daqui para baixo*/
 	  case busy:
 	    if (FD_ISSET (fd, &rfds)&& fd !=0 ){
 		FD_CLR (fd, &rfds);
@@ -86,7 +128,8 @@ setTCP_server (tcp_port, fd, errcode, n, addrlen, hints, res, addr, buffer);
 	      }
 	    break;
 	  }//switch(state)	
-  	}
+  	counter--;	
+      }
   }//while(1)
    	freeaddrinfo(res);
    	close(fd);
