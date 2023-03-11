@@ -1,6 +1,10 @@
 #include "netstruct.h"
 #include "tcp.h"
 #include <netdb.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/select.h>
+#include <unistd.h>
 #define PORT "58001"
 
 int setTCP_server (char *tcp_port, int fd, int errcode, ssize_t n, socklen_t addrlen,addrinfo hints, addrinfo * res, sockaddr_in addr, char *buffer){
@@ -25,35 +29,40 @@ int setTCP_server (char *tcp_port, int fd, int errcode, ssize_t n, socklen_t add
 void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netnode* node){
 	int fd,errcode,i;
 	ssize_t n;
-	socklen_t addrlen;
 	struct addrinfo hints,*res;
-	struct sockaddr_in addr;
 	char buffer[128];
 	char* token[3];
-
-	for (i=0; i>3; n++)
+	printf("%s %s\n",id,bootid);
+	printf("ENTREI NO DJOIN\n");
+	
+	for (i=0; i<3; i++)
 		token[i]=(char*)malloc(128*(sizeof(char)));
-
-
-	if (strcmp(id, bootid)==0){
+	printf("acabei setup\n");
+	printf("é isto: %d \n", strcmp(id, bootid));
+	if(strcmp(id, bootid)==0){
+		printf("INFO[000]: SELF CONNECTION\n");
 		bootIP=node->self.IP;
 		bootTCP=node->self.TCPport;
-
 		node->backup.IP=bootIP;
 		node->backup.TCPport=bootTCP;
 		node->backup.id=bootid;
-
-
+		node->external.fd=fd; /*e por hoje é tudo, vou dormir*/
+		node->external.IP=bootIP;
+		node->external.TCPport=bootTCP;
+		node->external.id=bootid;
+		printf("A sair do djoin\n");
+		return;
 	}
-	
+
 	fd=socket(AF_INET,SOCK_STREAM,0); //TCP socket
-	
+	printf("%d", fd);
 	if (fd==-1)
 		exit(1); //error
 	memset(&hints,0,sizeof hints);
 	hints.ai_family=AF_INET; //IPv4
 	hints.ai_socktype=SOCK_STREAM; //TCP socket
 	errcode=getaddrinfo(bootIP,bootTCP,&hints,&res);
+
 	if(errcode!=0)
 		/*error*/exit(1);
 	if (strcmp(id, bootid)!=0){
@@ -61,7 +70,7 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 		n=connect(fd,res->ai_addr,res->ai_addrlen);
 		if(n==-1)
 			/*error*/exit(1);
-		n=fprintf(fd,"NEW \s \s \s\n",node->self.id, node->self.IP ,node->self.TCPport);
+		n=fprintf(fdopen(fd, "w"),"NEW %s %s %s\n",node->self.id, node->self.IP ,node->self.TCPport);
 		if(n==-1)
 			/*error*/exit(1);
 		n=read(fd,buffer,128);
@@ -79,18 +88,83 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 			exit(1);
 		}
 	
-	node->backup.id=token[1]:
+	node->backup.id=token[1];
 	node->backup.IP=token[2];
 	node->backup.TCPport=buffer;
 	if(n==-1)
 		/*error*/exit(1);
 	}
+
 	node->external.fd=fd; /*e por hoje é tudo, vou dormir*/
 	node->external.IP=bootIP;
 	node->external.TCPport=bootTCP;
 	node->external.id=bootid;
+	printf("A sair do djoin\n");
 
+	return;
 
-	return
+}
 
+int handshake(netnode *host,addrinfo hints, addrinfo *res, sockaddr_in addr, char *buffer, fd_set rfds){
+	char* token[3]; /*função*/
+	int newfd,i;
+	netnode* aux=host;
+			printf("ENTER HANDSHAKE\n");
+			for (i=0; i<3; i++)
+				token[i]=(char*)malloc(128*(sizeof(char)));
+			FD_CLR(host->TCPsocket, &rfds);
+			socklen_t addrlen = sizeof (addr);
+			if ((newfd = accept (host->TCPsocket, &addr, &addrlen)) == -1)
+			  return newfd;
+
+			fgets(buffer,128,fdopen(newfd, "r"));
+			i=0;
+
+			token[i]=strtok(buffer, " ");
+			while(token[i]!=NULL){
+				if (i > 2)
+					break;
+				i++;
+				token[i]=strtok(NULL, " ");
+			}
+
+			if(strcmp(token[0], "NEW")!=0){
+				printf("WRONG FORMAT ON OUTSIDE CLIENT\n");
+				for (int i=0; i<3; i++){
+					free(token[i]);
+					return -1;
+				
+				}
+			}
+
+			if(aux->interns==NULL){
+				aux->interns=(entry*)malloc(sizeof(entry));
+			}
+			else{
+				while(aux->interns->brother!=NULL){
+					aux->interns=aux->interns->brother;
+
+				}
+
+				aux->interns->brother=(entry*)malloc(sizeof(entry));
+				aux->interns=aux->interns->brother;
+			}
+			strcpy(buffer, strtok(buffer, "\n"));
+			aux->interns->IP=token[1];
+			aux->interns->id=token[2];
+			aux->interns->TCPport=buffer;
+			aux->interns->fd=newfd; /*Passar por referência*/
+			aux=host;
+			/* Caso host->backup.id == host->self.id*/
+			/*Copiar estes aux->interns todos para o backup*/
+			if(strcmp(host->backup.id, host->self.id)){
+				host->backup.IP=token[1];
+				aux->backup.id=token[2];
+				aux->backup.TCPport=buffer;
+				aux->backup.fd=newfd;
+			}
+
+			fprintf(fdopen(newfd, "w"), "EXTERN %s %s %s\n", host->external.id, host->external.IP, host->external.TCPport);/*acaba aqui*/
+			printf("Adeus!\n");
+			return newfd;
 }

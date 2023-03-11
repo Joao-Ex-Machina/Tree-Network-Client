@@ -4,135 +4,115 @@
 #include "netstruct.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <sys/select.h>
 
 int main (int argc, char *argv[]){
-  struct netnode *host=NULL, *aux=NULL;
-  ssize_t n;
-  socklen_t addrlen;
-  struct addrinfo hints, *res;
-  struct sockaddr_in addr;
-  char buffer[128];
-  int fd, errcode, newfd, afd = 0;
-  fd_set rfds;
-  enum{ idle, busy } state;
-  int maxfd, counter;
-//      int regIP = [193,136,138,142];
-  char regUDP[6] = "59000";
-  char regIP[16]="193.136.138.142";
-  char tcp_port[6] = "58001";
-  char IP[16]= "1.1.1.1";
+	struct netnode *host=NULL;
+	ssize_t n;
+	socklen_t addrlen;
+	struct addrinfo hints, *res=NULL;
+	struct sockaddr_in addr;
+	char buffer[128];
+	int fd, errcode, newfd, afd = 0;
+	fd_set rfds;
+	enum{ idle, busy } state=idle;
+	int maxfd, counter;
 
-/*	if( argc < 3 || argc > 5){
-        	printf("Por favor verifique se usou todos os dados necessários e tente outra vez.\n");
-        	exit(EXIT_FAILURE);
-    	}
+	char *regUDP, *regIP, *tcp_port, *IP;
+	char backup_regIP[16]="193.136.138.142", backup_regUDP[6]="59000";
+	if( argc < 3 || argc > 5){
+		printf("ERROR [000]: Faulty init. Missing or Overflowing parameters.\n");
+		exit(EXIT_FAILURE);
+	}
 
-    	int main_IP = inet_aton(argv[1]);
-    	tcp_port = strtol(argv[2], NULL, 10);
 
-    	if (argc >= 4){
-        	regIP =  inet_aton(argv[3]);
-		if (argc == 5)
-        		regUDP =  strtol(argv[4], NULL, 10);
-i    	}
-*/
-host=(netnode*)malloc(sizeof(netnode));
+	IP=argv[1];
+	tcp_port=argv[2];
+	printf("Eu sou o %s na porta %s\n ",IP, tcp_port);
 
-host->TCPsocket=setTCP_server(tcp_port, fd, errcode, n, addrlen, hints, res, addr, buffer);
-aux=host;
-//host->UDPsocket=setUDP_server;
+	if (argc >= 4)
+		regIP=argv[3];
+	else
+		regIP=backup_regIP;
+	if (argc == 5)
+		regUDP=argv[4];
 
-while (1){
-	/*tenho que dar fix disto*/
-      FD_ZERO (&rfds);
-      switch (state){
-	case idle:
-	  FD_SET (fd, &rfds);
-	  maxfd = fd;
-	  break;
-	case busy:
-	  FD_SET (fd, &rfds);
-	  FD_SET (afd, &rfds);
-	  maxfd = max (fd, afd);
-	  break;
-	}			//switch(state)
-      counter =select (maxfd + 1, &rfds, (fd_set *) NULL, (fd_set *) NULL,(struct timeval *) NULL);
-      if (counter <= 0)
-	/*error */ exit (1);
+	else
+		regUDP=backup_regUDP;
+	printf("O meu servidor é %s na porta %s \n", regIP, regUDP);
+	host=(netnode*)malloc(sizeof(netnode));
+	host->self.IP=IP;
+	host->self.TCPport=tcp_port;
+	host->self.UDPport=regUDP;
 
-      while(counter>0){
-	switch (state){
-	  case idle:
-	    if (FD_ISSET (host->TCPsocket, &rfds)){
-		FD_CLR (host->TCPsocket, &rfds);
-		addrlen = sizeof (addr);
-		if ((newfd = accept (host->TCPsocket, &addr, &addrlen)) == -1)
-		  /*error */ exit (1);
-		fgets(buffer,128,newfd);
+	host->TCPsocket=setTCP_server(tcp_port, fd, errcode, n, addrlen, hints, res, addr, buffer);
+	printf("Socket TCP: %d\n", host->TCPsocket);
 
-		/* A FAZER Processar mensagem de tipo NEW*/
-		/*idk man maybe meter o Jorge a fazer isto*/
+	//host->UDPsocket=setUDP_server;
 
-		if(aux->interns==NULL){
-			aux->intern=(entry*)malloc(sizeof(entry));
-		}
-		else{
-			while(aux->interns->brother!=NULL){
-				aux->interns=aux->interns->brother;
+	while (1){
+		FD_ZERO (&rfds);
+		printf("entrei no while\n");
+		FD_SET(0,&rfds);
+		FD_SET(host->TCPsocket, &rfds);
+		maxfd=host->TCPsocket;
+		/*tenho que dar fix disto*/
+		counter =select (maxfd + 1, &rfds, (fd_set *) NULL, (fd_set *) NULL,(struct timeval *) NULL);
+		printf("counter: %d\n", counter);
+		if (counter <= 0)
+		/*error */ exit (1);
 
+		while(counter>0){
+			if (FD_ISSET (host->TCPsocket, &rfds)){
+				newfd=handshake(host, hints, res, addr,buffer,rfds);
+				/* if(newfd = -1){	
+					afd = newfd;
+					state = busy;
+			
+				}*/
 			}
 
-			aux->interns->brother=(entry*)malloc(sizeof(entry));
-			aux->interns=aux->interns->brother;
+			if (FD_ISSET (0, &rfds)){
+				fgets(buffer, 128 , stdin);
+				proc_stdin(buffer, host);
+			//	state=busy;
+			}
+			
+		/*switch (state){
+		  case idle:
+		    break;
+
+		    //e dar fix daqui para baixo
+		  case busy:
+		    if (FD_ISSET (host->TCPsocket, &rfds)){
+			FD_CLR (fd, &rfds);
+			addrlen = sizeof (addr);
+			if ((newfd = accept (fd, &addr, &addrlen)) == -1)
+			  //error 
+			  //exit (1);
+			close (newfd);
+		      }
+		    else if (FD_ISSET (afd, &rfds) && fd != 0){
+			FD_CLR (afd, &rfds);
+			if ((n = read (afd, buffer, 128)) != 0){
+			    if (n == -1)
+			      //error  exit (1);
+			    // ... write buffer in afd
+			  }
+			else{
+			    close (afd);
+			    state = idle;
+			}		//connection closed by peer
+		      }
+		    break;
+		  }//switch(state)	
+		counter--;	
+		*/
 		}
-
-		aux->interns->IP=;
-		aux->interns->id=;
-		aux->interns->TCPport=;
-		aux->interns->fd=newfd; /*Passar por referência*/
-		aux=host;
-		/* Caso host->backup.id == host->self.id*/
-		/*Copiar estes aux->interns todos para o backup*/
-
-		fprintf(newfd, "EXTERN \s \s \s\n", host->external.id, host->external.IP, host->external.TCPport);
-		afd = newfd;
-		state = busy;
-	      }
-	    else if (FD_ISSET (0, &rfds)){
-			fgets(buffer, 128 , stdin);
-			proc_stdin(buffer);
-			//state=busy;
-	    }
-
-	    break;
-	    /*e dar fix daqui para baixo*/
-	  case busy:
-	    if (FD_ISSET (fd, &rfds)&& fd !=0 ){
-		FD_CLR (fd, &rfds);
-		addrlen = sizeof (addr);
-		if ((newfd = accept (fd, &addr, &addrlen)) == -1)
-		  /*error */ exit (1);
-		close (newfd);
-	      }
-	    else if (FD_ISSET (afd, &rfds) && fd != 0){
-		FD_CLR (afd, &rfds);
-		if ((n = read (afd, buffer, 128)) != 0){
-		    if (n == -1)
-		      /*error */ exit (1);
-		    /* ... write buffer in afd */
-		  }
-		else{
-		    close (afd);
-		    state = idle;
-		}		//connection closed by peer
-	      }
-	    break;
-	  }//switch(state)	
-  	counter--;	
-      }
-  }//while(1)
-   	freeaddrinfo(res);
-   	close(fd);
+	}//while(1)
+	freeaddrinfo(res);
+	close(fd);
 	printf("end");
 	return 0;
 }
