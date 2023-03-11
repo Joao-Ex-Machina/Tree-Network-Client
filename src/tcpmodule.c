@@ -1,11 +1,6 @@
 #include "netstruct.h"
 #include "tcp.h"
-#include <netdb.h>
-#include <stdio.h>
-#include <string.h>
-#include <sys/select.h>
-#include <unistd.h>
-#define PORT "58001"
+#include "udp.h"
 
 int setTCP_server (char *tcp_port, int fd, int errcode, ssize_t n, socklen_t addrlen,addrinfo hints, addrinfo * res, sockaddr_in addr, char *buffer){
 	fd = socket (AF_INET, SOCK_STREAM, 0);	//TCP socket
@@ -168,3 +163,24 @@ int handshake(netnode *host,addrinfo hints, addrinfo *res, sockaddr_in addr, cha
 			printf("Adeus!\n");
 			return newfd;
 }
+
+bool join (netnode *host, char *net, char *id){
+	entry* data=NULL;
+	if(atoi(id)<100){
+		id[2]=id[1];
+		id[1]=id[0];
+		id[0]='0';
+		id[3]='\0';
+	}
+	if(UDPreg(host, net, id)==0){
+		return 0;
+	}
+	data=UDPquery(host, net);
+	if(data==NULL)
+		djoin(net, id, id, NULL, NULL, host);
+	else
+		djoin(net, id, data->id, data->IP, data->TCPport, host);
+	
+	return 1;
+}
+
