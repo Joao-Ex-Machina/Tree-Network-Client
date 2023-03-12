@@ -4,6 +4,7 @@
 #include "tcp.h"
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 void proc_stdin(char* buffer, netnode *host);
 #endif
 

@@ -16,7 +16,7 @@
 #include <time.h>
 
 int UDPconnect(char* regIP, char* regUDP);
-entry* UDPquery (netnode *host, char *net);
-bool UDPreg(netnode *host, char *net, char *id);
+entry* UDPquery (netnode *host, char *net,char* regIP, char* regUDP);
+bool UDPreg(netnode *host, char *net, char *id,char* regIP, char* regUDP);
 #endif
 

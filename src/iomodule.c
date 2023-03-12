@@ -12,6 +12,7 @@ void proc_stdin(char* buffer, netnode *host){
 //	for (n=0; n<6; n++)
 //		token[n]=(char*)calloc(1,128*(sizeof(char)));
 	n=0;
+	buffer=strtok(buffer,"\n");
 	token[n]=strtok(buffer, " ");
 	while(token[n]!=NULL){
 		if (n > 5)
@@ -36,8 +37,17 @@ void proc_stdin(char* buffer, netnode *host){
 		}
 	}
 
-	if (strcmp(token[0], "join") == 0)
-		printf("okay\n");
+	if (strcmp(token[0], "join") == 0){
+		printf("okay!\n");
+		for(n=1; n<3;n++){
+			if(token[n]==NULL || (token[n]!=NULL && strcmp(token[n],"\0"))==0){
+				printf("FAULT[001]: MISSING ARGUMENTS FOR COMMAND\n");
+				return;
+			}
+		}
+		join(host, token[1], token[2]);
+		
+	}	
 	else if (strcmp(token[0], "djoin") == 0){
 		printf("okay\n");
 		for(n=1; n<6;n++){

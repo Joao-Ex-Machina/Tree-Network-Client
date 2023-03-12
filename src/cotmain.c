@@ -1,13 +1,15 @@
 #include "main.h"
 #include "tcp.h"
+#include "udp.h"
 #include "io.h"
 #include "netstruct.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/select.h>
-
+#include <signal.h>
 int main (int argc, char *argv[]){
+	sigaction(SIGPIPE, &(struct sigaction){SIG_IGN}, NULL);
 	struct netnode *host=NULL;
 	ssize_t n;
 	socklen_t addrlen;
@@ -49,8 +51,10 @@ int main (int argc, char *argv[]){
 	host->TCPsocket=setTCP_server(tcp_port, fd, errcode, n, addrlen, hints, res, addr, buffer);
 	printf("Socket TCP: %d\n", host->TCPsocket);
 
-	//host->UDPsocket=setUDP_server;
-
+	host->UDPsocket=UDPconnect(regIP, regUDP);
+	printf("Socket UDP: %d\n", host->UDPsocket);
+	host->serverIP=regIP;
+	host->serverUDP=regUDP;
 	while (1){
 		FD_ZERO (&rfds);
 		printf("entrei no while\n");

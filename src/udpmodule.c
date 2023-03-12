@@ -2,13 +2,19 @@
 #include "udp.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 int UDPconnect(char* regIP, char* regUDP){
 	int fd, errcode;
 	ssize_t n;
+	struct addrinfo hints;
+	struct addrinfo *res;
+ 	struct sockaddr_in addr;
+
 	socklen_t addrlen;
-	struct addrinfo hints,*res;
-	struct sockaddr_in addr;
 	fd=socket(AF_INET,SOCK_DGRAM,0); //UDP socket
 	if(fd==-1)
 		/*error*/exit(1);
@@ -25,61 +31,90 @@ int UDPconnect(char* regIP, char* regUDP){
 	return fd;
 }
 
-entry* UDPquery (netnode *host, char *net){
-	entry *data=NULL;
+entry* UDPquery (netnode *host, char *net,char* regIP, char* regUDP){
+	entry *data=(entry*)malloc(sizeof(entry));
 	if(data==NULL){
 		printf("ERROR[000]: Out of memory, closing...");
 		exit(1);
 	}
-	char line[128];
+
+	char buffer[128];
+ 	struct addrinfo hints;
+	struct addrinfo *res;
+ 	struct sockaddr_in addr;
+	socklen_t addrlen=sizeof(addr);
 	int n_lines = 0;
 	int chosen_line = 0;
-		srand(time(NULL)); // seed the random number generator
-	fprintf(fdopen(host->UDPsocket, "w"),"NODES %s" , net);
+	int aux = 0; 
+	int errcode=getaddrinfo(regIP,regUDP,&hints,&res);
+	if(errcode!=0) /*error*/ exit(1);
+	int fd =host->UDPsocket;
+	srand(time(NULL)); // seed the random number generator
+	sendto(host->UDPsocket, "NODES ", 6,0,(struct sockaddr*)&addr, addrlen);
+	sendto(host->UDPsocket, net, 3,0,(struct sockaddr*)&addr, addrlen);
+	sendto(host->UDPsocket, "\0", 1,0,(struct sockaddr*)&addr, addrlen);
 
-		// count the number of lines in stdin
-		while ((fgets(line, sizeof(line), fdopen(host->UDPsocket, "r"))) != NULL)
-			n_lines++;
-		if(n_lines==1) //read NODELIST\n line only
-			return data;
-		// reset the file pointer to the beginning of stdin
-		fseek(fdopen(host->UDPsocket, "r"), 0, SEEK_SET);
+	// Determine file size
+	off_t size = lseek(fd, 0, SEEK_END);
+	if (size ==1)
+		return NULL;
 
-		// choose a random line
-		n_lines = n_lines - 2;
-		if (n_lines >= 0) {
-		chosen_line = (rand() % n_lines) + 2;
-		}
+	// Generate random position within file
+	srand(time(NULL));
+	size=size-1;
+	off_t pos = (rand() % size) + 1;
 
-		// extract the chosen line and print it
-		int current_line = 0;
-		while (fgets(line, sizeof(line), stdin) != NULL) {
-			if (current_line == chosen_line) {
-				data=(entry *)malloc(sizeof(entry));
-				data->IP=(char*)malloc(INET_ADDRSTRLEN);
-				data->TCPport=(char*)malloc(6*sizeof(char));
-				data->id=(char*)malloc(3*(sizeof(char)));
-				sscanf(line,"%s %s %s\n",data->id, data->IP, data->TCPport);
-				break;
-			}
-			current_line++;
-		}
-		return data;
+	// Read line of text starting from random position
+	ssize_t n = recvfrom(fd, buffer, sizeof(buffer),0,(struct sockaddr*)&addr, addrlen);
+	printf("%s",buffer);
+	if (n < 0) {
+		printf("Failed to read from file\n");
+		exit(1);
+	}
 
+	// Find end of line
+	char *end = buffer;
+	while (*end != '\n' && end < buffer + n) {
+		end++;
+	}
+	*end = '\0';
 
+	sscanf(buffer, "%s %s %s", data->id, data->IP, data->TCPport);	
+	return data;
+	
 }
 
-bool UDPreg(netnode *host, char *net, char *id){
+bool UDPreg(netnode *host, char *net, char *id,char* regIP, char* regUDP){
 	bool regflag=0;
+	char message[128];
 	char *buffer=(char*)malloc(6*sizeof(char));
+	struct addrinfo hints;
+	struct addrinfo *res;
+ 	struct sockaddr_in addr;
 	int id_int;
+	int errcode=getaddrinfo(regIP,regUDP,&hints,&res);
+	if(errcode!=0) /*error*/ exit(1);
 	int id_first;
+	FILE *stream;
+	socklen_t addrlen=sizeof(addr);
 	id_int=atoi(id);
 	id_first=id_int;
+	printf("entrei no registo\n");
 	while (regflag==0){
-		fprintf(fdopen(host->UDPsocket, "w"), "REG %s %s %s %s ", net, id, host->self.IP, host->self.TCPport);
-		fscanf(fdopen(host->UDPsocket,"r"),"%s", buffer);
+		printf("UDP socket:%d\n",host->UDPsocket);
+		sprintf(message,"REG %s %s %s %s\n", net, id, host->self.IP, host->self.TCPport);
+		
+		//printf("%s %d\n", buffer, strlen(buffer));
+		printf("%s",id);
+		printf("%s",id);
+		sendto(host->UDPsocket, message,strlen(message),0, res->ai_addr,res->ai_addrlen);
+
+
+		printf("registei\n");
+		int n=recvfrom(host->UDPsocket, buffer, 6,0,(struct sockaddr*)&addr, &addrlen);
+		printf("servidor: %s\n",buffer);
 		if(strcmp(buffer, "OKREG")==0){
+			printf("O Server aceitou\n");
 			regflag=1;
 			host->self.id=id;
 			free(buffer);

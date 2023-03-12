@@ -15,6 +15,8 @@ typedef struct netnode{
 	char* net;
 	int TCPsocket;
 	int UDPsocket;
+	char* serverIP;
+	char* serverUDP;
 	struct entry self;
 	struct entry backup;
 	struct entry external;

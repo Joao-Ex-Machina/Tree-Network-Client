@@ -166,16 +166,16 @@ int handshake(netnode *host,addrinfo hints, addrinfo *res, sockaddr_in addr, cha
 
 bool join (netnode *host, char *net, char *id){
 	entry* data=NULL;
-	if(atoi(id)<100){
-		id[2]=id[1];
-		id[1]=id[0];
-		id[0]='0';
-		id[3]='\0';
+	if(atoi(net)<100){
+		net[2]=net[1];
+		net[1]=net[0];
+		net[0]='0';
+		net[3]='\0';
 	}
-	if(UDPreg(host, net, id)==0){
+	if(UDPreg(host, net, id, host->serverIP, host->serverUDP)==0){
 		return 0;
 	}
-	data=UDPquery(host, net);
+	data=UDPquery(host, net, host->serverIP, host->serverUDP);
 	if(data==NULL)
 		djoin(net, id, id, NULL, NULL, host);
 	else
