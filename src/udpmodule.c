@@ -5,6 +5,7 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <time.h>
 #include <unistd.h>
 
 int UDPconnect(char* regIP, char* regUDP){
@@ -37,8 +38,7 @@ entry* UDPquery (netnode *host, char *net,char* regIP, char* regUDP){
 		printf("ERROR[000]: Out of memory, closing...");
 		exit(1);
 	}
-
-	char buffer[128];
+	char buffer[99*128];
  	struct addrinfo hints;
 	struct addrinfo *res;
  	struct sockaddr_in addr;
@@ -50,23 +50,28 @@ entry* UDPquery (netnode *host, char *net,char* regIP, char* regUDP){
 	if(errcode!=0) /*error*/ exit(1);
 	int fd =host->UDPsocket;
 	srand(time(NULL)); // seed the random number generator
-	sendto(host->UDPsocket, "NODES ", 6,0,(struct sockaddr*)&addr, addrlen);
-	sendto(host->UDPsocket, net, 3,0,(struct sockaddr*)&addr, addrlen);
-	sendto(host->UDPsocket, "\0", 1,0,(struct sockaddr*)&addr, addrlen);
+	sprintf(buffer, "NODES %s\n", net);
+	printf("host:%s\n", buffer);
+	
+	sendto(host->UDPsocket, buffer, strlen(buffer),0,res->ai_addr,res->ai_addrlen);	
+	recvfrom(fd, buffer, 14,0,(struct sockaddr*)&addr, &addrlen);
+
 
 	// Determine file size
 	off_t size = lseek(fd, 0, SEEK_END);
+	
 	if (size ==1)
 		return NULL;
-
+	printf("size: %ld\n", size);
+	printf("%s\n", buffer);
 	// Generate random position within file
 	srand(time(NULL));
-	size=size-1;
-	off_t pos = (rand() % size) + 1;
+	size=size-2;
+	off_t pos = (rand() % size) + 2;
 
 	// Read line of text starting from random position
-	ssize_t n = recvfrom(fd, buffer, sizeof(buffer),0,(struct sockaddr*)&addr, addrlen);
-	printf("%s",buffer);
+	ssize_t n = recvfrom(fd, buffer, sizeof(buffer),0,(struct sockaddr*)&addr, &addrlen);
+	printf("Server: %s\n",buffer);
 	if (n < 0) {
 		printf("Failed to read from file\n");
 		exit(1);
@@ -78,7 +83,7 @@ entry* UDPquery (netnode *host, char *net,char* regIP, char* regUDP){
 		end++;
 	}
 	*end = '\0';
-
+	printf("HOST: Chose data: %s\n",buffer);
 	sscanf(buffer, "%s %s %s", data->id, data->IP, data->TCPport);	
 	return data;
 	
@@ -118,7 +123,7 @@ bool UDPreg(netnode *host, char *net, char *id,char* regIP, char* regUDP){
 			regflag=1;
 			host->self.id=id;
 			free(buffer);
-			return 1;
+			return 0;
 		}
 		else{
 			id_int=atoi(id);
@@ -127,7 +132,7 @@ bool UDPreg(netnode *host, char *net, char *id,char* regIP, char* regUDP){
 				id_int=0;
 			else if(id_int==id_first){
 				free(buffer);
-				return 0;
+				return 1;
 			}
 			sprintf(id, "%d",id_int);
 

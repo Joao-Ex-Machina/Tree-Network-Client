@@ -1,6 +1,9 @@
 #include "netstruct.h"
 #include "tcp.h"
 #include "udp.h"
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
 
 int setTCP_server (char *tcp_port, int fd, int errcode, ssize_t n, socklen_t addrlen,addrinfo hints, addrinfo * res, sockaddr_in addr, char *buffer){
 	fd = socket (AF_INET, SOCK_STREAM, 0);	//TCP socket
@@ -65,7 +68,8 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 		n=connect(fd,res->ai_addr,res->ai_addrlen);
 		if(n==-1)
 			/*error*/exit(1);
-		n=fprintf(fdopen(fd, "w"),"NEW %s %s %s\n",node->self.id, node->self.IP ,node->self.TCPport);
+		sprintf(buffer,"NEW %s %s %s\n",node->self.id, node->self.IP ,node->self.TCPport);
+		n=write(fd, buffer, strlen(buffer));
 		if(n==-1)
 			/*error*/exit(1);
 		n=read(fd,buffer,128);
@@ -100,7 +104,7 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 
 }
 
-int handshake(netnode *host,addrinfo hints, addrinfo *res, sockaddr_in addr, char *buffer, fd_set rfds){
+int handshake(netnode *host,addrinfo hints, addrinfo *res, sockaddr_in addr,char *buffer,fd_set rfds){
 	char* token[3]; /*função*/
 	int newfd,i;
 	netnode* aux=host;
@@ -112,9 +116,9 @@ int handshake(netnode *host,addrinfo hints, addrinfo *res, sockaddr_in addr, cha
 			if ((newfd = accept (host->TCPsocket, &addr, &addrlen)) == -1)
 			  return newfd;
 
-			fgets(buffer,128,fdopen(newfd, "r"));
+			read(newfd, buffer, 128);
 			i=0;
-
+			buffer=strtok(buffer, "\n");
 			token[i]=strtok(buffer, " ");
 			while(token[i]!=NULL){
 				if (i > 2)
@@ -159,7 +163,8 @@ int handshake(netnode *host,addrinfo hints, addrinfo *res, sockaddr_in addr, cha
 				aux->backup.fd=newfd;
 			}
 
-			fprintf(fdopen(newfd, "w"), "EXTERN %s %s %s\n", host->external.id, host->external.IP, host->external.TCPport);/*acaba aqui*/
+			sprintf(buffer, "EXTERN %s %s %s\n", host->external.id, host->external.IP, host->external.TCPport);/*acaba aqui*/
+			write(newfd, buffer, strlen(buffer));
 			printf("Adeus!\n");
 			return newfd;
 }
@@ -172,8 +177,9 @@ bool join (netnode *host, char *net, char *id){
 		net[0]='0';
 		net[3]='\0';
 	}
-	if(UDPreg(host, net, id, host->serverIP, host->serverUDP)==0){
-		return 0;
+	if(UDPreg(host, net, id, host->serverIP, host->serverUDP)==1){
+		printf("[NET] Cannot register to network");
+		return 1;
 	}
 	data=UDPquery(host, net, host->serverIP, host->serverUDP);
 	if(data==NULL)
