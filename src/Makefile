@@ -26,4 +26,4 @@ clean:
 
 #remove object files and emac backup files from directory before forcing recompilation
 sweep:
-	$(RM) count *.o *~
+	$(RM) count *.o *~ vgcore*
