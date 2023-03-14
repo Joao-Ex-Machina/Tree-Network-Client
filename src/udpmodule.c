@@ -38,12 +38,18 @@ entry* UDPquery (netnode *host, char *net,char* regIP, char* regUDP){
 		printf("ERROR[000]: Out of memory, closing...");
 		exit(1);
 	}
-	char buffer[99*128];
- 	struct addrinfo hints;
+	char *buffer=(char*)malloc(128*sizeof(char));
+	char *connections[5];
+	for (int i=0; i<5; i++){
+		connections[i]=(char*)malloc(128*sizeof(char));
+	}
+	char *buffercontrol=(char*)malloc(128*sizeof(char));
+ 	char *chosen_buffer;
+	struct addrinfo hints;
 	struct addrinfo *res;
  	struct sockaddr_in addr;
 	socklen_t addrlen=sizeof(addr);
-	int n_lines = 0;
+	int n=0,n_lines = 0;
 	int chosen_line = 0;
 	int aux = 0; 
 	int errcode=getaddrinfo(regIP,regUDP,&hints,&res);
@@ -51,40 +57,49 @@ entry* UDPquery (netnode *host, char *net,char* regIP, char* regUDP){
 	int fd =host->UDPsocket;
 	srand(time(NULL)); // seed the random number generator
 	sprintf(buffer, "NODES %s\n", net);
-	printf("host:%s\n", buffer);
+	sprintf(buffercontrol, "NODESLIST %s\n", net);
+	printf("HOST:%s\n", buffer);
 	
 	sendto(host->UDPsocket, buffer, strlen(buffer),0,res->ai_addr,res->ai_addrlen);	
-	recvfrom(fd, buffer, 14,0,(struct sockaddr*)&addr, &addrlen);
+	recvfrom(fd, buffer, 128,0,(struct sockaddr*)&addr, &addrlen);
+	printf("SERVER: %s\n", buffer);
+	buffercontrol=strtok(buffer, "\n");
+	connections[0]=buffercontrol;
+		while(connections[n]!=NULL){
+			if (n > 5)
+				break;
+			n++;
 
+			connections[n]=strtok(NULL, "\n");
+				//free(aux);
+		}
 
-	// Determine file size
-	off_t size = lseek(fd, 0, SEEK_END);
-	
-	if (size ==1)
-		return NULL;
-	printf("size: %ld\n", size);
-	printf("%s\n", buffer);
-	// Generate random position within file
-	srand(time(NULL));
-	size=size-2;
-	off_t pos = (rand() % size) + 2;
-
-	// Read line of text starting from random position
-	ssize_t n = recvfrom(fd, buffer, sizeof(buffer),0,(struct sockaddr*)&addr, &addrlen);
-	printf("Server: %s\n",buffer);
-	if (n < 0) {
-		printf("Failed to read from file\n");
+	printf("SERVER:%s\n",buffer);
+	if(strcmp(buffer, buffercontrol)!=0){
+		printf("[ERROR]: WRONG FORMAT ON REGISTRAR SERVER, EXITING...");
 		exit(1);
 	}
+	n--;
+	chosen_line=(rand()%n)+1;
+	if(n==0){ //network is empty
+		data->id=host->self.id;
+		data->IP=host->self.IP;
+		data->TCPport=host->self.TCPport;
+		free(buffer);
+		return data;
 
-	// Find end of line
-	char *end = buffer;
-	while (*end != '\n' && end < buffer + n) {
-		end++;
 	}
-	*end = '\0';
-	printf("HOST: Chose data: %s\n",buffer);
-	sscanf(buffer, "%s %s %s", data->id, data->IP, data->TCPport);	
+	chosen_buffer=connections[chosen_line];
+	printf("HOST: Chose data:[%s]\n",chosen_buffer);
+	printf("banan: %d\n",sscanf(chosen_buffer, "%2c %s %s", data->id, data->IP, data->TCPport));
+	printf("saved: %s %s %s\n", data->id, data->IP, data->TCPport);
+	if(sscanf(chosen_buffer, "%s %s %s", data->id, data->IP, data->TCPport) != 5){
+		printf("[ERROR]: WRONG FORMAT ON REGISTRAR SERVER, EXITING...");
+		free(buffer);
+		exit(1);
+
+	}	
+	free(buffer);
 	return data;
 	
 }
