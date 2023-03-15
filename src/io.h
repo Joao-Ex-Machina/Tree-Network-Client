@@ -6,5 +6,7 @@
 #include <string.h>
 #include <stdbool.h>
 void proc_stdin(char* buffer, netnode *host);
+bool Is_ValidIPv4(const char *candidate);
+bool Is_ValidPort(const char *candidate);
 #endif
 

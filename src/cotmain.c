@@ -9,17 +9,16 @@
 #include <sys/select.h>
 #include <signal.h>
 int main (int argc, char *argv[]){
-	sigaction(SIGPIPE, &(struct sigaction){SIG_IGN}, NULL);
+	sigaction(SIGPIPE, &((struct sigaction){SIG_IGN}), NULL);
 	struct netnode *host=NULL;
-	ssize_t n;
-	socklen_t addrlen;
+	ssize_t n=0;
+	socklen_t addrlen=0;
 	struct addrinfo hints, *res=NULL;
 	struct sockaddr_in addr;
 	char buffer[128];
-	int fd, errcode, newfd, afd = 0;
+	int fd=0, errcode=0, newfd=0, afd = 0;
 	fd_set rfds;
-	enum{ idle, busy } state=idle;
-	int maxfd, counter;
+	int maxfd=0, counter=0;
 
 	char *regUDP, *regIP, *tcp_port, *IP;
 	char backup_regIP[16]="193.136.138.142", backup_regUDP[6]="59000";
@@ -42,6 +41,14 @@ int main (int argc, char *argv[]){
 
 	else
 		regUDP=backup_regUDP;
+	if(!Is_ValidIPv4(IP)|| !Is_ValidPort(tcp_port)){
+		printf("ERROR[000]: Incorrect Host-Client data. Check host IPv4 and TCP port.");
+		exit(1);
+	}
+	if(!Is_ValidIPv4(regIP)|| !Is_ValidPort(regUDP)){
+		printf("ERROR[000]: Incorrect Regitrar Server data. Check Server IPv4 and UDP port.");
+		exit(1);
+	}
 	printf("O meu servidor é %s na porta %s \n", regIP, regUDP);
 	host=(netnode*)malloc(sizeof(netnode));
 	host->self.IP=IP;
@@ -50,7 +57,6 @@ int main (int argc, char *argv[]){
 
 	host->TCPsocket=setTCP_server(tcp_port, fd, errcode, n, addrlen, hints, res, addr, buffer);
 	printf("Socket TCP: %d\n", host->TCPsocket);
-
 	host->UDPsocket=UDPconnect(regIP, regUDP);
 	printf("Socket UDP: %d\n", host->UDPsocket);
 	host->serverIP=regIP;
@@ -83,37 +89,7 @@ int main (int argc, char *argv[]){
 			//	state=busy;
 			}
 			
-		/*switch (state){
-		  case idle:
-		    break;
-
-		    //e dar fix daqui para baixo
-		  case busy:
-		    if (FD_ISSET (host->TCPsocket, &rfds)){
-			FD_CLR (fd, &rfds);
-			addrlen = sizeof (addr);
-			if ((newfd = accept (fd, &addr, &addrlen)) == -1)
-			  //error 
-			  //exit (1);
-			close (newfd);
-		      }
-		    else if (FD_ISSET (afd, &rfds) && fd != 0){
-			FD_CLR (afd, &rfds);
-			if ((n = read (afd, buffer, 128)) != 0){
-			    if (n == -1)
-			      //error  exit (1);
-			    // ... write buffer in afd
-			  }
-			else{
-			    close (afd);
-			    state = idle;
-			}		//connection closed by peer
-		      }
-		    break;
-		  }//switch(state)	
-		counter--;	
-		*/
-		}
+			}
 	}//while(1)
 	freeaddrinfo(res);
 	close(fd);

@@ -9,13 +9,12 @@
 #include <unistd.h>
 
 int UDPconnect(char* regIP, char* regUDP){
-	int fd, errcode;
-	ssize_t n;
-	struct addrinfo hints;
-	struct addrinfo *res;
+	int fd=0, errcode=0;
+	ssize_t n=0;
+	struct addrinfo hints={.ai_family = AF_INET, .ai_socktype = SOCK_STREAM};
+	struct addrinfo *res=NULL;
  	struct sockaddr_in addr;
 
-	socklen_t addrlen;
 	fd=socket(AF_INET,SOCK_DGRAM,0); //UDP socket
 	if(fd==-1)
 		/*error*/exit(1);
@@ -26,7 +25,7 @@ int UDPconnect(char* regIP, char* regUDP){
 	if(errcode!=0)
 		/*error*/ exit(1);
 	if(n==-1) /*error*/ exit(1);
-	addrlen=sizeof(addr);
+	n=sizeof(addr);
 	if(n==-1)
 		/*error*/ exit(1);
 	return fd;
@@ -39,19 +38,18 @@ entry* UDPquery (netnode *host, char *net,char* regIP, char* regUDP){
 		exit(1);
 	}
 	char *buffer=(char*)malloc(128*sizeof(char));
-	char *connections[5];
-	for (int i=0; i<5; i++){
+	char *connections[99];
+	for (int i=0; i<99; i++){
 		connections[i]=(char*)malloc(128*sizeof(char));
 	}
 	char *buffercontrol=(char*)malloc(128*sizeof(char));
  	char *chosen_buffer;
-	struct addrinfo hints;
+	struct addrinfo hints={.ai_family = AF_INET, .ai_socktype = SOCK_STREAM};
 	struct addrinfo *res;
  	struct sockaddr_in addr;
 	socklen_t addrlen=sizeof(addr);
 	int n=0,n_lines = 0;
-	int chosen_line = 0;
-	int aux = 0; 
+	int chosen_line = 0; 
 	int errcode=getaddrinfo(regIP,regUDP,&hints,&res);
 	if(errcode!=0) /*error*/ exit(1);
 	int fd =host->UDPsocket;
@@ -108,14 +106,13 @@ bool UDPreg(netnode *host, char *net, char *id,char* regIP, char* regUDP){
 	bool regflag=0;
 	char message[128];
 	char *buffer=(char*)malloc(6*sizeof(char));
-	struct addrinfo hints;
-	struct addrinfo *res;
+	struct addrinfo hints={.ai_family = AF_INET, .ai_socktype = SOCK_STREAM};
+	struct addrinfo *res=NULL;
  	struct sockaddr_in addr;
-	int id_int;
+	int id_int=0;
 	int errcode=getaddrinfo(regIP,regUDP,&hints,&res);
 	if(errcode!=0) /*error*/ exit(1);
-	int id_first;
-	FILE *stream;
+	int id_first=0;
 	socklen_t addrlen=sizeof(addr);
 	id_int=atoi(id);
 	id_first=id_int;
@@ -131,7 +128,7 @@ bool UDPreg(netnode *host, char *net, char *id,char* regIP, char* regUDP){
 
 
 		printf("registei\n");
-		int n=recvfrom(host->UDPsocket, buffer, 6,0,(struct sockaddr*)&addr, &addrlen);
+		recvfrom(host->UDPsocket, buffer, 6,0,(struct sockaddr*)&addr, &addrlen);
 		printf("servidor: %s\n",buffer);
 		if(strcmp(buffer, "OKREG")==0){
 			printf("O Server aceitou\n");

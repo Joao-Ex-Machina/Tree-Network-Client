@@ -25,9 +25,9 @@ int setTCP_server (char *tcp_port, int fd, int errcode, ssize_t n, socklen_t add
 }
 
 void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netnode* node){
-	int fd,errcode,i;
-	ssize_t n;
-	struct addrinfo hints,*res;
+	int fd=0,errcode=0,i=0;
+	ssize_t n=0;
+	struct addrinfo hints,*res=NULL;
 	char buffer[128];
 	char* token[3];
 	printf("%s %s\n",id,bootid);
@@ -113,7 +113,7 @@ int handshake(netnode *host,addrinfo hints, addrinfo *res, sockaddr_in addr,char
 				token[i]=(char*)malloc(128*(sizeof(char)));
 			FD_CLR(host->TCPsocket, &rfds);
 			socklen_t addrlen = sizeof (addr);
-			if ((newfd = accept (host->TCPsocket, &addr, &addrlen)) == -1)
+			if ((newfd = accept (host->TCPsocket, (struct sockaddr*)&addr, &addrlen)) == -1)
 			  return newfd;
 
 			read(newfd, buffer, 128);
