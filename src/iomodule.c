@@ -109,6 +109,7 @@ bool Is_ValidPort(const char *candidate){
     return false;
 }
 
+
 void host_exit(netnode *host){
 	char in;
 	if(host->is_connected){
@@ -126,4 +127,19 @@ void host_exit(netnode *host){
 		free(host);
 		exit(0);
 	}
+}
+void show_topology(netnode *host){
+	entry *aux=NULL;
+	printf("EXTERNAL\n");
+	printf("%s %s %s\n", host->external.id, host->external.IP, host->external.TCPport);
+	printf("BACKUP\n");
+	printf("%s %s %s\n", host->backup.id, host->backup.IP, host->backup.TCPport);
+	printf("INTERNALS");
+	aux=host->interns;
+	while(aux != NULL){
+		printf("%s %s %s\n", aux->id, aux->IP, aux->TCPport);
+		aux=aux->brother;
+	}
+
+
 }
