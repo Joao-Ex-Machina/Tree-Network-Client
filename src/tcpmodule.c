@@ -1,6 +1,7 @@
 #include "netstruct.h"
 #include "tcp.h"
 #include "udp.h"
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -48,6 +49,7 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 		node->external.IP=bootIP;
 		node->external.TCPport=bootTCP;
 		node->external.id=bootid;
+		node->is_connected=true;
 		printf("A sair do djoin\n");
 		return;
 	}
@@ -59,15 +61,19 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 	memset(&hints,0,sizeof hints);
 	hints.ai_family=AF_INET; //IPv4
 	hints.ai_socktype=SOCK_STREAM; //TCP socket
+	hints.ai_flags = AI_PASSIVE;
 	errcode=getaddrinfo(bootIP,bootTCP,&hints,&res);
 
-	if(errcode!=0)
+	if(errcode!=0){
+		printf("ERROR: Something went wrong :/ ABORTING!");
 		/*error*/exit(1);
+	}
 	if (strcmp(id, bootid)!=0){
-
 		n=connect(fd,res->ai_addr,res->ai_addrlen);
-		if(n==-1)
+		if(n==-1){
+			printf("ERROR: Something went wrong :/ ABORTING!");
 			/*error*/exit(1);
+		}
 		sprintf(buffer,"NEW %s %s %s\n",node->self.id, node->self.IP ,node->self.TCPport);
 		n=write(fd, buffer, strlen(buffer));
 		if(n==-1)
@@ -98,6 +104,7 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 	node->external.IP=bootIP;
 	node->external.TCPport=bootTCP;
 	node->external.id=bootid;
+	node->is_connected=true;
 	printf("A sair do djoin\n");
 
 	return;
@@ -178,7 +185,7 @@ bool join (netnode *host, char *net, char *id){
 		net[3]='\0';
 	}
 	if(UDPreg(host, net, id, host->serverIP, host->serverUDP)==1){
-		printf("[NET] Cannot register to network");
+		printf("[NET]: Cannot register to network");
 		return 1;
 	}
 	data=UDPquery(host, net, host->serverIP, host->serverUDP);
@@ -190,3 +197,39 @@ bool join (netnode *host, char *net, char *id){
 	return 1;
 }
 
+bool leave(netnode *host){
+	char message[128];
+
+	struct addrinfo hints={.ai_family = AF_INET, .ai_socktype = SOCK_STREAM};
+	struct addrinfo *res;
+ 	struct sockaddr_in addr;
+	socklen_t addrlen=sizeof(addr);
+		if(!(host->is_connected)){
+		printf("[FAULT]: Must be connected to a network to be able to leave one \n");
+		return false;
+	}
+	int errcode=getaddrinfo(host->serverIP,host->serverUDP,&hints,&res);
+	if(errcode!=0)
+		/*error*/ exit(1);
+	int fd =host->UDPsocket;
+	sprintf(message, "UNREG %s %s\n", host->net, host->self.id);
+	sendto(host->UDPsocket, message, strlen(message),0,res->ai_addr,res->ai_addrlen);
+	recvfrom(host->UDPsocket, message, 7,0,(struct sockaddr*)&addr, &addrlen);
+	if(strcmp("OKUNREG", message)!=0){
+		printf("[FAULT]: Disconnection query was not accepted\n");	
+		return false;
+	}
+	/*WILL UDP DISCONNECT HERE*/
+	
+	entry *aux=host->interns;
+	entry *next=NULL;
+	while(aux!=NULL){ /*close sockets and free memory*/
+		next=aux->brother;
+		close(aux->fd);
+		free(aux);
+		aux=next;
+	}
+	close(host->external.fd); /*close socket*/
+	host->is_connected=false;
+	return true;
+}

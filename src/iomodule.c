@@ -38,6 +38,10 @@ void proc_stdin(char* buffer, netnode *host){
 	}
 
 	if (strcmp(token[0], "join") == 0){
+		if(host->is_connected){
+			printf("FAULT: You are already connected to a network. Please leave your network before re-connecting\n");
+			return;
+		}
 		printf("okay!\n");
 		for(n=1; n<3;n++){
 			if(token[n]==NULL || (token[n]!=NULL && strcmp(token[n],"\0"))==0){
@@ -50,6 +54,11 @@ void proc_stdin(char* buffer, netnode *host){
 	}	
 	else if (strcmp(token[0], "djoin") == 0){
 		printf("okay\n");
+
+		if(host->is_connected){
+			printf("FAULT: You are already connected to a network. Please leave your network before re-connecting\n");
+			return;
+		}
 		for(n=1; n<6;n++){
 			if(token[n]==NULL || (token[n]!=NULL && strcmp(token[n],"\0"))==0){
 				printf("FAULT[001]: MISSING ARGUMENTS FOR COMMAND\n");
@@ -98,4 +107,23 @@ bool Is_ValidPort(const char *candidate){
     if (port >= 0 && port <= 65535) /*Port 0 is reserved for stdin, max TCP/UDP port is 65535*/
         return true;
     return false;
+}
+
+void host_exit(netnode *host){
+	char in;
+	if(host->is_connected){
+		printf("[INFO]: Host is still connected to a network\n");
+		printf("[INFO]:Want to force exit? (y/N) ");
+		scanf("%c",&in);
+		if(in=='y'|| in=='Y'){
+			leave(host);
+			free(host);
+			exit(0);
+		}
+
+	}
+	else{
+		free(host);
+		exit(0);
+	}
 }

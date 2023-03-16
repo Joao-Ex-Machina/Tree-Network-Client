@@ -18,5 +18,6 @@ int setTCP_server(char *tcp_port,int fd,int errcode,ssize_t n, socklen_t addrlen
 void djoin (char *net, char *id, char *bootid, char *bootIP, char *bootTCP, netnode *node);
 int handshake(netnode *host,addrinfo hints, addrinfo *res, sockaddr_in addr, char *buffer, fd_set rfds);
 bool join (netnode *host, char *net, char *id);
+bool leave (netnode *host);
 #endif
 

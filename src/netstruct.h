@@ -1,6 +1,6 @@
 #ifndef _NETSTRUCT_H_
 #define _NETSTRUCT_H_
-
+#include <stdbool.h>
 typedef struct entry{
 	struct entry* brother;
 	char* id;
@@ -12,6 +12,7 @@ typedef struct entry{
 }entry;
 
 typedef struct netnode{
+	bool is_connected;
 	char* net;
 	int TCPsocket;
 	int UDPsocket;

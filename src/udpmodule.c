@@ -37,6 +37,9 @@ entry* UDPquery (netnode *host, char *net,char* regIP, char* regUDP){
 		printf("ERROR[000]: Out of memory, closing...");
 		exit(1);
 	}
+	data->IP=(char*)malloc(16*sizeof(char));
+	data->id=(char*)malloc(4*sizeof(char));
+	data->TCPport=(char*)malloc(6*sizeof(char));
 	char *buffer=(char*)malloc(128*sizeof(char));
 	char *connections[99];
 	for (int i=0; i<99; i++){
@@ -62,9 +65,9 @@ entry* UDPquery (netnode *host, char *net,char* regIP, char* regUDP){
 	recvfrom(fd, buffer, 128,0,(struct sockaddr*)&addr, &addrlen);
 	printf("SERVER: %s\n", buffer);
 	buffercontrol=strtok(buffer, "\n");
-	connections[0]=buffercontrol;
+	connections[0]=buffer;
 		while(connections[n]!=NULL){
-			if (n > 5)
+			if (n > 99)
 				break;
 			n++;
 
@@ -73,12 +76,17 @@ entry* UDPquery (netnode *host, char *net,char* regIP, char* regUDP){
 		}
 
 	printf("SERVER:%s\n",buffer);
+	printf("CONTROL:%s\n",buffercontrol);
+	printf("diff: %d\n", strcmp(buffer, buffercontrol));
 	if(strcmp(buffer, buffercontrol)!=0){
 		printf("[ERROR]: WRONG FORMAT ON REGISTRAR SERVER, EXITING...");
 		exit(1);
 	}
-	n--;
-	chosen_line=(rand()%n)+1;
+	printf("n is: %d\n", n);
+	if(n>1)
+		n=n-2;/*Network is not empty and should not connect to the same node*/
+	else
+		n--;
 	if(n==0){ //network is empty
 		data->id=host->self.id;
 		data->IP=host->self.IP;
@@ -87,11 +95,12 @@ entry* UDPquery (netnode *host, char *net,char* regIP, char* regUDP){
 		return data;
 
 	}
+	chosen_line=(rand()%n)+1;
 	chosen_buffer=connections[chosen_line];
 	printf("HOST: Chose data:[%s]\n",chosen_buffer);
-	printf("banan: %d\n",sscanf(chosen_buffer, "%2c %s %s", data->id, data->IP, data->TCPport));
+	printf("banan: %d\n",sscanf(connections[chosen_line], "%s %s %s", data->id, data->IP, data->TCPport));
 	printf("saved: %s %s %s\n", data->id, data->IP, data->TCPport);
-	if(sscanf(chosen_buffer, "%s %s %s", data->id, data->IP, data->TCPport) != 5){
+	if(sscanf(chosen_buffer, "%s %s %s", data->id, data->IP, data->TCPport) != 3){
 		printf("[ERROR]: WRONG FORMAT ON REGISTRAR SERVER, EXITING...");
 		free(buffer);
 		exit(1);
