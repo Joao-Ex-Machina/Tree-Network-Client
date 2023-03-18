@@ -178,12 +178,7 @@ int handshake(netnode *host,addrinfo hints, addrinfo *res, sockaddr_in addr,char
 
 bool join (netnode *host, char *net, char *id){
 	entry* data=NULL;
-	if(atoi(net)<100){
-		net[2]=net[1];
-		net[1]=net[0];
-		net[0]='0';
-		net[3]='\0';
-	}
+	printf("Net: %s\n", net);
 	if(UDPreg(host, net, id, host->serverIP, host->serverUDP)==1){
 		printf("[NET]: Cannot register to network");
 		return 1;
@@ -194,30 +189,35 @@ bool join (netnode *host, char *net, char *id){
 	else
 		djoin(net, id, data->id, data->IP, data->TCPport, host);
 	
-	return 1;
+	return 0;
 }
 
 bool leave(netnode *host){
-	char message[128];
-
+	char message[128]="\0";
+	char servermsg[8]="\0";
 	struct addrinfo hints={.ai_family = AF_INET, .ai_socktype = SOCK_STREAM};
 	struct addrinfo *res;
  	struct sockaddr_in addr;
 	socklen_t addrlen=sizeof(addr);
-		if(!(host->is_connected)){
-		printf("[FAULT]: Must be connected to a network to be able to leave one \n");
-		return false;
+	
+	if(!(host->is_connected)){
+		printf("[FAULT]: Must be connected to a network to be able to withdraw one \n");
+		return 1;
 	}
+
 	int errcode=getaddrinfo(host->serverIP,host->serverUDP,&hints,&res);
 	if(errcode!=0)
 		/*error*/ exit(1);
 	int fd =host->UDPsocket;
 	sprintf(message, "UNREG %s %s\n", host->net, host->self.id);
+	printf("host: %s\n", message);
 	sendto(host->UDPsocket, message, strlen(message),0,res->ai_addr,res->ai_addrlen);
-	recvfrom(host->UDPsocket, message, 7,0,(struct sockaddr*)&addr, &addrlen);
-	if(strcmp("OKUNREG", message)!=0){
+	recvfrom(host->UDPsocket, servermsg, 7,0,(struct sockaddr*)&addr, &addrlen);
+	printf("Server: %s\n", servermsg);
+	servermsg[7]='\0';
+	if(strcmp("OKUNREG\0", servermsg)!=0){
 		printf("[FAULT]: Disconnection query was not accepted\n");	
-		return false;
+		return 1;
 	}
 	/*WILL UDP DISCONNECT HERE*/
 	
@@ -229,7 +229,8 @@ bool leave(netnode *host){
 		free(aux);
 		aux=next;
 	}
-	close(host->external.fd); /*close socket*/
+	if(strcmp(host->self.id,host->external.id)!=0)
+		close(host->external.fd); /*close socket*/
 	host->is_connected=false;
-	return true;
+	return 0;
 }

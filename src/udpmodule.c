@@ -60,7 +60,6 @@ entry* UDPquery (netnode *host, char *net,char* regIP, char* regUDP){
 	sprintf(buffer, "NODES %s\n", net);
 	sprintf(buffercontrol, "NODESLIST %s\n", net);
 	printf("HOST:%s\n", buffer);
-	
 	sendto(host->UDPsocket, buffer, strlen(buffer),0,res->ai_addr,res->ai_addrlen);	
 	recvfrom(fd, buffer, 128,0,(struct sockaddr*)&addr, &addrlen);
 	printf("SERVER: %s\n", buffer);
@@ -142,6 +141,7 @@ bool UDPreg(netnode *host, char *net, char *id,char* regIP, char* regUDP){
 		if(strcmp(buffer, "OKREG")==0){
 			printf("O Server aceitou\n");
 			regflag=1;
+			host->net=net;
 			host->self.id=id;
 			free(buffer);
 			return 0;

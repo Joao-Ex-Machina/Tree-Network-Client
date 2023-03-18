@@ -8,5 +8,7 @@
 void proc_stdin(char* buffer, netnode *host);
 bool Is_ValidIPv4(const char *candidate);
 bool Is_ValidPort(const char *candidate);
+void show_topology(netnode *host);
+void host_exit(netnode *host);
 #endif
 

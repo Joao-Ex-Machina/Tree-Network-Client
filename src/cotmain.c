@@ -86,8 +86,10 @@ int main (int argc, char *argv[]){
 			if (FD_ISSET (0, &rfds)){
 				fgets(buffer, 128 , stdin);
 				proc_stdin(buffer, host);
+				fflush(stdin);
 			//	state=busy;
 			}
+			//if ()
 			
 			}
 	}//while(1)
