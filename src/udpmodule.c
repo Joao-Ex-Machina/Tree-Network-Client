@@ -42,7 +42,7 @@ entry* UDPquery (netnode *host, char *net,char* regIP, char* regUDP){
 	data->TCPport=(char*)malloc(6*sizeof(char));
 	char *buffer=(char*)malloc(128*sizeof(char));
 	char *connections[99];
-	for (int i=0; i<99; i++){
+	for (int i=0; i<99; i++){ /*HAVE TO FREE LATER*/
 		connections[i]=(char*)malloc(128*sizeof(char));
 	}
 	char *buffercontrol=(char*)malloc(128*sizeof(char));
@@ -63,7 +63,7 @@ entry* UDPquery (netnode *host, char *net,char* regIP, char* regUDP){
 	sendto(host->UDPsocket, buffer, strlen(buffer),0,res->ai_addr,res->ai_addrlen);	
 	recvfrom(fd, buffer, 128,0,(struct sockaddr*)&addr, &addrlen);
 	printf("SERVER: %s\n", buffer);
-	buffercontrol=strtok(buffer, "\n");
+	buffercontrol=strtok(buffer, "\n"); /*IT WAS BUFFERCONTROL BEFORE HAVE TO CHECK IF ITS WORKING*/
 	connections[0]=buffer;
 		while(connections[n]!=NULL){
 			if (n > 99)
@@ -87,6 +87,9 @@ entry* UDPquery (netnode *host, char *net,char* regIP, char* regUDP){
 	else
 		n--;
 	if(n==0){ //network is empty
+		for (int i=0; i<99; i++){ /*FREE LATER*/
+			free(connections[i]);
+		}
 		data->id=host->self.id;
 		data->IP=host->self.IP;
 		data->TCPport=host->self.TCPport;
@@ -102,9 +105,19 @@ entry* UDPquery (netnode *host, char *net,char* regIP, char* regUDP){
 	if(sscanf(chosen_buffer, "%s %s %s", data->id, data->IP, data->TCPport) != 3){
 		printf("[ERROR]: WRONG FORMAT ON REGISTRAR SERVER, EXITING...");
 		free(buffer);
+		for (int i=0; i<99; i++){ /*FREE LATER*/
+			free(connections[i]);
+		}
+
 		exit(1);
 
-	}	
+	}
+	
+	for (int i=0; i<99; i++){
+		if(i!=chosen_line)
+			free(connections[i]);
+	}
+
 	free(buffer);
 	return data;
 	
@@ -155,7 +168,7 @@ bool UDPreg(netnode *host, char *net, char *id,char* regIP, char* regUDP){
 				free(buffer);
 				return 1;
 			}
-			sprintf(id, "%d",id_int);
+			sprintf(id, "%2d",id_int);
 
 		
 						

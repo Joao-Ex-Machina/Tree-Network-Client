@@ -113,7 +113,9 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 
 int handshake(netnode *host,addrinfo hints, addrinfo *res, sockaddr_in addr,char *buffer,fd_set rfds){
 	char* token[3]; /*função*/
-	int newfd,i;
+	char message[128];
+	int newfd=0,i=0;
+	char* buffer2 = strdup(buffer); // dup buffer to avoid writing on top of other data. Will probably fix in another version
 	netnode* aux=host;
 			printf("ENTER HANDSHAKE\n");
 			for (i=0; i<3; i++)
@@ -123,10 +125,10 @@ int handshake(netnode *host,addrinfo hints, addrinfo *res, sockaddr_in addr,char
 			if ((newfd = accept (host->TCPsocket, (struct sockaddr*)&addr, &addrlen)) == -1)
 			  return newfd;
 
-			read(newfd, buffer, 128);
+			read(newfd, buffer2, 128);
 			i=0;
-			buffer=strtok(buffer, "\n");
-			token[i]=strtok(buffer, " ");
+			buffer=strtok(buffer2, "\n");
+			token[i]=strtok(buffer2, " ");
 			while(token[i]!=NULL){
 				if (i > 2)
 					break;
@@ -155,10 +157,10 @@ int handshake(netnode *host,addrinfo hints, addrinfo *res, sockaddr_in addr,char
 				aux->interns->brother=(entry*)malloc(sizeof(entry));
 				aux->interns=aux->interns->brother;
 			}
-			strcpy(buffer, strtok(buffer, "\n"));
+			strcpy(buffer, strtok(buffer2, "\n"));
 			aux->interns->IP=token[1];
 			aux->interns->id=token[2];
-			aux->interns->TCPport=buffer;
+			aux->interns->TCPport=buffer2;
 			aux->interns->fd=newfd; /*Passar por referência*/
 			aux=host;
 			/* Caso host->backup.id == host->self.id*/
@@ -166,12 +168,12 @@ int handshake(netnode *host,addrinfo hints, addrinfo *res, sockaddr_in addr,char
 			if(strcmp(host->backup.id, host->self.id)){
 				host->backup.IP=token[1];
 				aux->backup.id=token[2];
-				aux->backup.TCPport=buffer;
+				aux->backup.TCPport=buffer2;
 				aux->backup.fd=newfd;
 			}
 
-			sprintf(buffer, "EXTERN %s %s %s\n", host->external.id, host->external.IP, host->external.TCPport);/*acaba aqui*/
-			write(newfd, buffer, strlen(buffer));
+			sprintf(message, "EXTERN %s %s %s\n", host->external.id, host->external.IP, host->external.TCPport);/*acaba aqui*/
+			write(newfd, message, strlen(message));
 			printf("Adeus!\n");
 			return newfd;
 }
@@ -184,7 +186,7 @@ bool join (netnode *host, char *net, char *id){
 		return 1;
 	}
 	data=UDPquery(host, net, host->serverIP, host->serverUDP);
-	if(data==NULL)
+	if(data==NULL) /*It works but its a bad practice, will remove in  later version*/
 		djoin(net, id, id, NULL, NULL, host);
 	else
 		djoin(net, id, data->id, data->IP, data->TCPport, host);
