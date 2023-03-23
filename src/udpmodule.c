@@ -105,19 +105,9 @@ entry* UDPquery (netnode *host, char *net,char* regIP, char* regUDP){
 	if(sscanf(chosen_buffer, "%s %s %s", data->id, data->IP, data->TCPport) != 3){
 		printf("[ERROR]: WRONG FORMAT ON REGISTRAR SERVER, EXITING...");
 		free(buffer);
-		for (int i=0; i<99; i++){ /*FREE LATER*/
-			free(connections[i]);
-		}
-
 		exit(1);
 
 	}
-	
-	for (int i=0; i<99; i++){
-		if(i!=chosen_line)
-			free(connections[i]);
-	}
-
 	free(buffer);
 	return data;
 	

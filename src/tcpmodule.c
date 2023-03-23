@@ -37,7 +37,7 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 	for (i=0; i<3; i++)
 		token[i]=(char*)malloc(128*(sizeof(char)));
 	printf("acabei setup\n");
-	printf("é isto: %d \n", strcmp(id, bootid));
+	printf("comparei os dois : %d \n", strcmp(id, bootid));
 	if(strcmp(id, bootid)==0){
 		printf("INFO[000]: SELF CONNECTION\n");
 		bootIP=node->self.IP;
@@ -79,6 +79,7 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 		if(n==-1)
 			/*error*/exit(1);
 		n=read(fd,buffer,128);
+		printf("O tipo disse mesmo: %s\n",buffer);
 		/*processar EXTERN*/
 		i=0;
 		token[i]=strtok(buffer, " ");
