@@ -82,8 +82,8 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 		printf("O tipo disse mesmo: %s\n",buffer);
 		/*processar EXTERN*/
 		i=0;
-		buffer=strtok(buffer,"\n");
-		token[i]=strtok(buffer, " ");
+		token[0]=strtok(buffer,"\n");
+		token[i]=strtok(token[0], " ");
 		while(token[i]!=NULL){
 			if (i > 2)
 				break;
