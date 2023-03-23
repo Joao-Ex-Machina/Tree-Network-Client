@@ -82,6 +82,7 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 		printf("O tipo disse mesmo: %s\n",buffer);
 		/*processar EXTERN*/
 		i=0;
+		buffer=strtok(buffer,"\n");
 		token[i]=strtok(buffer, " ");
 		while(token[i]!=NULL){
 			if (i > 2)
@@ -93,7 +94,7 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 			printf("ERROR\n");
 			exit(1);
 		}
-	
+	printf("I got this: %s %s %s\n", token[1], token[2], buffer);	
 	node->backup.id=token[1];
 	node->backup.IP=token[2];
 	node->backup.TCPport=buffer;
