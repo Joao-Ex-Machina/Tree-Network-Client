@@ -62,12 +62,12 @@ int main (int argc, char *argv[]){
 	printf("Socket UDP: %d\n", host->UDPsocket);
 	host->serverIP=regIP;
 	host->serverUDP=regUDP;
-	maxfd=max(host->TCPsocket, host->UDPsocket);
 	while (1){
 		FD_ZERO (&(host->rfds));
 		printf("entrei no while\n");
 		FD_SET(0,&rfds);
 		FD_SET(host->TCPsocket, &(host->rfds));
+		maxfd=host->TCPsocket;
 		if(host->external.IP !=NULL){
 			FD_SET(host->external.fd, &(host->rfds));
 			maxfd=host->external.fd;
