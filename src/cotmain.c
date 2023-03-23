@@ -62,12 +62,24 @@ int main (int argc, char *argv[]){
 	printf("Socket UDP: %d\n", host->UDPsocket);
 	host->serverIP=regIP;
 	host->serverUDP=regUDP;
+	maxfd=max(host->TCPsocket, host->UDPsocket);
 	while (1){
-		FD_ZERO (&rfds);
+		FD_ZERO (&(host->rfds));
 		printf("entrei no while\n");
 		FD_SET(0,&rfds);
-		FD_SET(host->TCPsocket, &rfds);
-		maxfd=host->TCPsocket;
+		FD_SET(host->TCPsocket, &(host->rfds));
+		if(host->external.IP !=NULL){
+			FD_SET(host->external.fd, &(host->rfds));
+			maxfd=host->external.fd;
+		}
+		aux=host->interns;
+		while(aux!=NULL){
+			FD_SET(aux->fd, &(host->rfds));
+			if(aux->fd>maxfd)
+				maxfd=aux->fd;
+
+		}
+		
 		/*tenho que dar fix disto*/
 		counter =select (maxfd + 1, &rfds, (fd_set *) NULL, (fd_set *) NULL,(struct timeval *) NULL);
 		printf("counter: %d\n", counter);
@@ -75,7 +87,7 @@ int main (int argc, char *argv[]){
 		/*error */ exit (1);
 
 		while(counter>0){
-			if (FD_ISSET (host->TCPsocket, &rfds)){
+			if (FD_ISSET (host->TCPsocket, &(host->rfds))){
 				newfd=handshake(host, hints, res, addr,buffer,rfds);
 				/* if(newfd = -1){	
 					afd = newfd;
@@ -83,19 +95,19 @@ int main (int argc, char *argv[]){
 			
 				}*/
 			}
-			if (FD_ISSET (host->external.fd, &rfds)){
+			if (FD_ISSET (host->external.fd, &(host->rfds))){
 				printf("O externo apitou");	
 			}
 
 			aux=host->interns;
 			while(aux!=NULL){
-				if(FD_ISSET (aux->fd, &rfds)){
+				if(FD_ISSET (aux->fd, &(host->rfds))){
 					printf("Um interno apitou");
 				}
 				aux=aux->brother;
 			}
 
-			if (FD_ISSET (0, &rfds)){
+			if (FD_ISSET (0,&(host->rfds))){
 				fgets(buffer, 128 , stdin);
 				proc_stdin(buffer, host);
 				fflush(stdin);

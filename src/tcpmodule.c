@@ -29,7 +29,7 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 	int fd=0,errcode=0,i=0;
 	ssize_t n=0;
 	struct addrinfo hints,*res=NULL;
-	char buffer[128];
+	char *buffer=(char*)malloc(128*sizeof(char));
 	char* token[3];
 	printf("%s %s\n",id,bootid);
 	printf("ENTREI NO DJOIN\n");

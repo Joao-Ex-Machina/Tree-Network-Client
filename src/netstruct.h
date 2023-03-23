@@ -1,6 +1,7 @@
 #ifndef _NETSTRUCT_H_
 #define _NETSTRUCT_H_
 #include <stdbool.h>
+#include <netdb.h>
 typedef struct entry{
 	struct entry *brother;
 	char *id;
@@ -17,6 +18,7 @@ typedef struct container{
 }container;
 
 typedef struct netnode{
+	fd_set rfds;
 	bool is_connected;
 	char *net;
 	int TCPsocket;
