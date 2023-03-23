@@ -16,6 +16,7 @@ int main (int argc, char *argv[]){
 	struct addrinfo hints, *res=NULL;
 	struct sockaddr_in addr;
 	char buffer[128];
+	struct entry *aux=NULL;
 	int fd=0, errcode=0, newfd=0, afd = 0;
 	fd_set rfds;
 	int maxfd=0, counter=0;
@@ -82,6 +83,17 @@ int main (int argc, char *argv[]){
 			
 				}*/
 			}
+			if (FD_ISSET (host->external.fd, &rfds)){
+				printf("O externo apitou");	
+			}
+
+			aux=host->interns;
+			while(aux!=NULL){
+				if(FD_ISSET (aux->fd, &rfds)){
+					printf("Um interno apitou");
+				}
+				aux=aux->brother;
+			}
 
 			if (FD_ISSET (0, &rfds)){
 				fgets(buffer, 128 , stdin);
@@ -94,7 +106,6 @@ int main (int argc, char *argv[]){
 			}
 	}//while(1)
 	freeaddrinfo(res);
-	close(fd);
 	printf("end");
 	return 0;
 }

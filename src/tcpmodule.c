@@ -165,11 +165,11 @@ int handshake(netnode *host,addrinfo hints, addrinfo *res, sockaddr_in addr,char
 			aux=host;
 			/* Caso host->backup.id == host->self.id*/
 			/*Copiar estes aux->interns todos para o backup*/
-			if(strcmp(host->backup.id, host->self.id)){
-				host->backup.IP=token[1];
-				aux->backup.id=token[2];
-				aux->backup.TCPport=buffer2;
-				aux->backup.fd=newfd;
+			if(strcmp(host->external.id, host->self.id)==0){
+				host->external.IP=token[1];
+				aux->external.id=token[2];
+				aux->external.TCPport=buffer2;
+				aux->external.fd=newfd;
 			}
 
 			sprintf(message, "EXTERN %s %s %s\n", host->external.id, host->external.IP, host->external.TCPport);/*acaba aqui*/

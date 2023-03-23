@@ -151,6 +151,11 @@ void show_topology(netnode *host){
 	printf("%s %s %s\n", host->backup.id, host->backup.IP, host->backup.TCPport);
 	printf("INTERNALS\n");
 	aux=host->interns;
+	if(aux==NULL){
+		printf("--empty--\n");
+		return;
+
+	}
 	while(aux != NULL){
 		printf("%s %s %s\n", aux->id, aux->IP, aux->TCPport);
 		aux=aux->brother;
