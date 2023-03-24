@@ -1,9 +1,11 @@
 #include "io.h"
 #include "netstruct.h"
 #include "tcp.h"
+#include "content.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 
 void proc_stdin(char* buffer, netnode *host){
@@ -162,4 +164,72 @@ void show_topology(netnode *host){
 	}
 	return;
 
+}
+
+void proc_extern(netnode *host){
+	char *buffer=(char*)malloc(128*sizeof(char)), *message=(char*)malloc(128*sizeof(char));
+	char *token[4];
+	int i=0;
+	entry *aux=host->interns;
+	int n=read(host->external.fd,buffer,128);
+	if(n==0 || n==-1){
+		/*extern disconected*/
+		close(host->external.fd);
+		if(strcmp(host->self.id, host->backup.id)!=0) /*its not anchor*/
+			djoin(host->net, host->self.id, host->backup.id, host->backup.IP, host->backup.TCPport, host);
+		else if(aux->brother != NULL){
+			host->interns=aux->brother; /*promote second internal to first internal*/
+			host->external.id=host->interns->id; /*promote first internal to anchor*/
+			host->external.IP=host->interns->IP;
+			host->external.TCPport=host->interns->TCPport;
+			host->external.fd=host->interns->fd;
+			free(aux);
+			
+		}
+		else
+			free(aux); /*clear anchor that left*/
+		/*spread information*/
+		sprintf(message, "EXTERN %s %s %s\n", host->external.id, host->external.IP, host->external.TCPport);
+		aux=host->interns;
+		while(aux!=NULL){
+			write(aux->fd, message, strlen(message));
+			aux=aux->brother;
+		}	
+
+
+		return;
+	}
+	else{
+		buffer=strtok(buffer, "\n");
+		token[i]=strtok(buffer, " ");
+		while(token[i]!=NULL){
+			if (i > 2)
+				break;
+			i++;
+			token[i]=strtok(NULL, " ");
+		}
+
+		if(strcmp(token[0], "QUERY")==0){
+			query_content(host, token[1], token[2], token[3]);
+			return;
+		}
+
+
+		else if(strcmp(token[0], "WITHDRAW")==0){
+			return;		
+		}
+		
+		else if(strcmp(token[0], "EXTERN")==0){
+			host->backup.id=token[1];
+			host->backup.IP=token[2];
+			host->backup.TCPport=token[3];
+			return;		
+		}
+		else{
+			printf("[FAULT]: Unknown contact from external node");
+			return;
+		}
+
+	}
+	return;
 }

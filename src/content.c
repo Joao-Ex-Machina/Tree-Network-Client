@@ -1,8 +1,4 @@
-#include "netstruct.h"
-#include "io.h"
-#include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include "content.h"
 
 void create_content(netnode *host, char* message){
 	struct container *aux=host->content_list, *aux2=host->content_list;
@@ -44,16 +40,27 @@ void show_names(netnode *host){
 		printf("[INFO]: No contents\n");
 		return;
 	}
-	printf("--[START OF CONTENT LIST]--");
+	printf("--[START OF CONTENT LIST]--\n");
 	while(aux!=NULL){
 		printf("%s\n", aux->content);
 		aux=aux->next;
 	}
-	printf("--[END OF CONTENT LIST]--");
+	printf("--[END OF CONTENT LIST]--\n");
 	return;
 }
 
 void query_content(netnode *host, char *dest, char *origin, char * query){
-				
-
+	char *message=(char*)malloc(128*(sizeof(char)));
+	entry *aux=host->interns;
+	if(host->is_connected == false){
+		printf("[INFO]: Cannot query while outside a network");
+		return;
+	}
+	sprintf(message, "QUERY %s %s %s\n", dest, origin, query);/*acaba aqui*/
+	while (aux != NULL){
+		write(aux->fd, message, strlen(message));
+		aux=aux->brother;
+	}
+	free(message);
+	return;
 }

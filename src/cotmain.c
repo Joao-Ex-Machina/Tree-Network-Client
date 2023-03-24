@@ -51,21 +51,27 @@ int main (int argc, char *argv[]){
 		exit(1);
 	}
 	printf("O meu servidor é %s na porta %s \n", regIP, regUDP);
+	/*QUICK HOST INITIALIZATION*/
 	host=(netnode*)malloc(sizeof(netnode));
 	host->self.IP=IP;
 	host->self.TCPport=tcp_port;
 	host->self.UDPport=regUDP;
-
+	host->is_connected=false;
+	host->serverIP=regIP;
+	host->serverUDP=regUDP;
+	host->external.IP=NULL;
+	host->external.fd=-1;
+	host->interns=NULL;
+	
+	/*SOCKET INIT*/
 	host->TCPsocket=setTCP_server(tcp_port, fd, errcode, n, addrlen, hints, res, addr, buffer);
 	printf("Socket TCP: %d\n", host->TCPsocket);
 	host->UDPsocket=UDPconnect(regIP, regUDP);
 	printf("Socket UDP: %d\n", host->UDPsocket);
-	host->serverIP=regIP;
-	host->serverUDP=regUDP;
 	while (1){
 		FD_ZERO (&(host->rfds));
 		printf("entrei no while\n");
-		FD_SET(0,&rfds);
+		FD_SET(0,&(host->rfds));
 		FD_SET(host->TCPsocket, &(host->rfds));
 		maxfd=host->TCPsocket;
 		if(host->external.IP !=NULL){
@@ -81,7 +87,7 @@ int main (int argc, char *argv[]){
 		}
 		
 		/*tenho que dar fix disto*/
-		counter =select (maxfd + 1, &rfds, (fd_set *) NULL, (fd_set *) NULL,(struct timeval *) NULL);
+		counter =select (maxfd + 1, &(host->rfds), (fd_set *) NULL, (fd_set *) NULL,(struct timeval *) NULL);
 		printf("counter: %d\n", counter);
 		if (counter <= 0)
 		/*error */ exit (1);
@@ -89,20 +95,24 @@ int main (int argc, char *argv[]){
 		while(counter>0){
 			if (FD_ISSET (host->TCPsocket, &(host->rfds))){
 				newfd=handshake(host, hints, res, addr,buffer,rfds);
-				/* if(newfd = -1){	
-					afd = newfd;
-					state = busy;
-			
-				}*/
 			}
+
 			if (FD_ISSET (host->external.fd, &(host->rfds))){
-				printf("O externo apitou");	
+				if(strcmp(host->external.id, host->self.id)!=0){
+					printf("O externo apitou");
+					proc_extern(host);
+					
+				}
+
+				else
+					printf("Estou sozinho na rede");	
+					
 			}
 
 			aux=host->interns;
 			while(aux!=NULL){
 				if(FD_ISSET (aux->fd, &(host->rfds))){
-					printf("Um interno apitou");
+					printf("Um interno (%s) apitou", aux->id);
 				}
 				aux=aux->brother;
 			}

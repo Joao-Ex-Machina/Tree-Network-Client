@@ -87,13 +87,17 @@ entry* UDPquery (netnode *host, char *net,char* regIP, char* regUDP){
 	else
 		n--;
 	if(n==0){ //network is empty
-		for (int i=0; i<99; i++){ /*FREE LATER*/
-			free(connections[i]);
-		}
+		/*for (int i=0; i<99; i++){
+			if(connections[i]!=NULL)
+				free(connections[i]);
+			
+		}*/
+	
 		data->id=host->self.id;
 		data->IP=host->self.IP;
 		data->TCPport=host->self.TCPport;
-		free(buffer);
+		if(buffer !=NULL)
+			free(buffer);
 		return data;
 
 	}
