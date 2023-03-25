@@ -85,6 +85,25 @@ void proc_stdin(char* buffer, netnode *host){
 		free(buffer2);
 		return;
 	}
+	else if(strcmp(token[0], "create")==0){
+		create_content(host, token[1]);
+		return;
+
+	}
+	else if(strcmp(token[0], "delete")==0){
+		remove_content(host, token[1]);
+		return;
+	}
+	else if (strcmp(token[0], "get")==0) {
+		query_content(host, token[1], host->self.id, token[2]);
+		return;
+	
+	}
+	else if((strcmp(token[0],"sn")==0)|| ((strcmp(token[0],"show")==0)&&(strcmp(token[1],"names")==0))){
+		show_names(host);
+		return;
+	}
+
 	else if(strcmp(token[0], "leave")==0){
 		if(leave(host)){
 			printf("[FAULT]: Leave failed");
@@ -210,12 +229,21 @@ void proc_extern(netnode *host){
 		}
 
 		if(strcmp(token[0], "QUERY")==0){
-			query_content(host, token[1], token[2], token[3]);
+			if(strcmp(host->self.id, token[1])==0)
+				search_content(host, token[1], token[2], token[3]);
+			else
+			
+				query_content(host, token[1], token[2], token[3]);
 			return;
 		}
 
-
 		else if(strcmp(token[0], "WITHDRAW")==0){
+			aux=host->interns;
+			while(aux!=NULL){
+				sprintf(message, "WITHDRAW %s\n", token[1]);
+				write(aux->fd,message,sizeof(message));
+			}
+			free(message);
 			return;		
 		}
 		
@@ -233,3 +261,13 @@ void proc_extern(netnode *host){
 	}
 	return;
 }
+
+	/*	else if((strcmp(token[0], "CONTENT")==0)||(strcmp(token[0], "NOCONTENT")==0)){ 
+			sprintf(message, "%s %s %s %s\n", token[0], token[1], token[2], token[3]);
+			if(strcmp(host->self.id, token[1])==0)
+				printf(message);
+			else
+				write(host->external.fd, message, strlen(message));
+
+		}*/
+
