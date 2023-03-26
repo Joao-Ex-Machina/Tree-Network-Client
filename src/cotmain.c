@@ -94,11 +94,13 @@ int main (int argc, char *argv[]){
 
 		while(counter>0){
 			if (FD_ISSET (host->TCPsocket, &(host->rfds))){
-				newfd=handshake(host, hints, res, addr,buffer,rfds);
+				printf("alguém quer-se registar\n");
+				newfd=handshake(host, hints, res, addr,buffer,host->rfds);
 			}
 
 			if (FD_ISSET (host->external.fd, &(host->rfds))){
 				if(strcmp(host->external.id, host->self.id)!=0){
+					FD_CLR(host->external.fd, &(host->rfds));
 					printf("O externo apitou");
 					proc_extern(host);
 					
@@ -112,6 +114,7 @@ int main (int argc, char *argv[]){
 			aux=host->interns;
 			while(aux!=NULL){
 				if(FD_ISSET (aux->fd, &(host->rfds))){
+					FD_CLR(aux->fd, &(host->rfds));
 					printf("Um interno (%s) apitou", aux->id);
 				}
 				aux=aux->brother;
@@ -119,13 +122,14 @@ int main (int argc, char *argv[]){
 
 			if (FD_ISSET (0,&(host->rfds))){
 				fgets(buffer, 128 , stdin);
+				FD_CLR(0, &(host->rfds));
 				proc_stdin(buffer, host);
 				fflush(stdin);
 			//	state=busy;
 			}
 			//if ()
-			
-			}
+			counter--;
+		}
 	}//while(1)
 	freeaddrinfo(res);
 	printf("end");

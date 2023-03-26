@@ -55,14 +55,14 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 	}
 
 	fd=socket(AF_INET,SOCK_STREAM,0); //TCP socket
-	printf("%d", fd);
+	printf("%d\n", fd);
 	if (fd==-1)
 		exit(1); //error
 	memset(&hints,0,sizeof hints);
 	hints.ai_family=AF_INET; //IPv4
 	hints.ai_socktype=SOCK_STREAM; //TCP socket
-	hints.ai_flags = AI_PASSIVE;
 	errcode=getaddrinfo(bootIP,bootTCP,&hints,&res);
+	printf("Vou ligar-me ao %s %s\n", bootIP, bootTCP);
 
 	if(errcode!=0){
 		printf("ERROR: Something went wrong :/ ABORTING!");
@@ -76,9 +76,13 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 		}
 		sprintf(buffer,"NEW %s %s %s\n",node->self.id, node->self.IP ,node->self.TCPport);
 		n=write(fd, buffer, strlen(buffer));
+		printf("Mandei isto: %s\n", buffer);
 		if(n==-1)
 			/*error*/exit(1);
 		n=read(fd,buffer,128);
+		if(n==-1)
+			/*error*/exit(1);
+
 		printf("O tipo disse mesmo: %s\n",buffer);
 		/*processar EXTERN*/
 		i=0;

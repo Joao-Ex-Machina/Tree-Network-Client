@@ -222,7 +222,7 @@ void proc_extern(netnode *host){
 		buffer=strtok(buffer, "\n");
 		token[i]=strtok(buffer, " ");
 		while(token[i]!=NULL){
-			if (i > 2)
+			if (i > 3)
 				break;
 			i++;
 			token[i]=strtok(NULL, " ");
@@ -262,12 +262,33 @@ void proc_extern(netnode *host){
 	return;
 }
 
-	/*	else if((strcmp(token[0], "CONTENT")==0)||(strcmp(token[0], "NOCONTENT")==0)){ 
+void proc_intern(netnode *host, entry *intern, entry *prev){
+	char *buffer=(char*)malloc(128*sizeof(char)), *message=(char*)malloc(128*sizeof(char));
+	char *token[4];
+	int i=0;
+	int n=read(intern->fd,buffer,128);
+	if(n==0){ /*intern left*/
+		prev->brother=intern->brother;
+		free(intern); /*so many lost blocks*/
+	}
+
+	buffer=strtok(buffer, "\n");
+	token[i]=strtok(buffer, " ");
+	while(token[i]!=NULL){
+		if (i > 2)
+			break;
+		i++;
+		token[i]=strtok(NULL, " ");
+		}
+
+	if((strcmp(token[0], "CONTENT")==0)||(strcmp(token[0], "NOCONTENT")==0)){ 
 			sprintf(message, "%s %s %s %s\n", token[0], token[1], token[2], token[3]);
 			if(strcmp(host->self.id, token[1])==0)
 				printf(message);
 			else
 				write(host->external.fd, message, strlen(message));
 
-		}*/
+	}
+
+}
 

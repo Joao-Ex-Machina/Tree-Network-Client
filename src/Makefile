@@ -5,8 +5,8 @@ CFLAGS  = -Wall -std=gnu99 -g
 #executable
 default: cot
 #Linking
-cot:  cotmain.o tcpmodule.o iomodule.o udpmodule.o content.o
-	$(CC) $(CFLAGS) -o cot cotmain.o tcpmodule.o iomodule.o udpmodule.o content.o
+cot:  cotmain.o tcpmodule.o iomodule.o udpmodule.o contentmodule.o
+	$(CC) $(CFLAGS) -o cot cotmain.o tcpmodule.o iomodule.o udpmodule.o contentmodule.o
 #Compilation of the object files
 cotmain.o:  
 	$(CC) $(CFLAGS) -c cotmain.c
@@ -20,8 +20,8 @@ iomodule.o:
 udpmodule.o: 
 	$(CC) $(CFLAGS) -c udpmodule.c
 
-content.o:  
-	$(CC) $(CFLAGS) -c content.c
+contentmodule.o:  
+	$(CC) $(CFLAGS) -c contentmodule.c
 
 #remove object files and emac backup files from directory before forcing recompilation
 clean:
