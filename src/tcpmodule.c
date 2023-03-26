@@ -72,7 +72,9 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 	if (strcmp(id, bootid)!=0){
 		n=connect(fd,res->ai_addr,res->ai_addrlen);
 		if(n==-1){
-			printf("ERROR: Something went wrong :/ ABORTING!");
+			printf("ERROR: Cannot Connect to node or network. Please clear this network or choose a new one.");
+			node->is_connected=true;
+			leave(node);
 			/*error*/exit(1);
 		}
 		memset(buffer, '\0', 128*sizeof(char));
@@ -152,15 +154,24 @@ int handshake(netnode *host,addrinfo hints, addrinfo *res, sockaddr_in addr,char
 				
 				}
 			}
-
-			if(aux->interns==NULL){
-				aux->interns=(entry*)malloc(sizeof(entry));
+			
+						/* Caso host->backup.id == host->self.id*/
+			/*Copiar estes aux->interns todos para o backup*/
+			if(strcmp(host->external.id, host->self.id)==0){
+				host->external.IP=token[2];
+				aux->external.id=token[1];
+				aux->external.TCPport=token[3];
+				aux->external.fd=newfd;
 			}
 			else{
-				while(aux->interns->brother!=NULL){
-					aux->interns=aux->interns->brother;
-
+				if(aux->interns==NULL){
+					aux->interns=(entry*)malloc(sizeof(entry));
 				}
+				else{
+					while(aux->interns->brother!=NULL){
+						aux->interns=aux->interns->brother;
+
+					}
 
 				aux->interns->brother=(entry*)malloc(sizeof(entry));
 				aux->interns=aux->interns->brother;
@@ -171,13 +182,7 @@ int handshake(netnode *host,addrinfo hints, addrinfo *res, sockaddr_in addr,char
 			aux->interns->TCPport=token[3];
 			aux->interns->fd=newfd; /*Passar por referência*/
 			aux=host;
-			/* Caso host->backup.id == host->self.id*/
-			/*Copiar estes aux->interns todos para o backup*/
-			if(strcmp(host->external.id, host->self.id)==0){
-				host->external.IP=token[2];
-				aux->external.id=token[1];
-				aux->external.TCPport=token[3];
-				aux->external.fd=newfd;
+
 			}
 
 			sprintf(message, "EXTERN %s %s %s\n", host->external.id, host->external.IP, host->external.TCPport);/*acaba aqui*/
@@ -242,5 +247,8 @@ bool leave(netnode *host){
 	if(strcmp(host->self.id,host->external.id)!=0)
 		close(host->external.fd); /*close socket*/
 	host->is_connected=false;
+	host->external.IP=NULL; /*Reset variables to initial state*/
+	host->external.fd=-1;
+	host->interns=NULL;
 	return 0;
 }

@@ -194,14 +194,23 @@ void proc_extern(netnode *host){
 	if(n==0 || n==-1){
 		/*extern disconected*/
 		close(host->external.fd);
-		if(strcmp(host->self.id, host->backup.id)!=0) /*its not anchor*/
+		if(strcmp(host->self.id, host->backup.id)!=0) /*im not an anchor*/
 			djoin(host->net, host->self.id, host->backup.id, host->backup.IP, host->backup.TCPport, host);
 		else if(aux!= NULL){
 			host->external.id=host->interns->id; /*promote first internal to anchor*/
 			host->external.IP=host->interns->IP;
 			host->external.TCPport=host->interns->TCPport;
 			host->external.fd=host->interns->fd;
-			
+			aux=host->interns;
+			host->interns=host->interns->brother;
+			free(aux); /*better free here*/ /*its no longer an intern*/
+		}
+		else{
+			host->external.id=host->self.id; /*no one to anchor, alone again*/
+			host->external.IP=host->self.IP;
+			host->external.TCPport=host->self.TCPport;
+			host->external.fd=host->self.fd;
+
 		}
 		/*spread information*/
 		sprintf(message, "EXTERN %s %s %s\n", host->external.id, host->external.IP, host->external.TCPport);
@@ -210,7 +219,8 @@ void proc_extern(netnode *host){
 			write(aux->fd, message, strlen(message));
 			aux=aux->brother;
 		}	
-
+		free(buffer);
+		free(message);
 
 		return;
 	}
@@ -280,7 +290,7 @@ void proc_intern(netnode *host, entry *intern, entry *prev){
 	if((strcmp(token[0], "CONTENT")==0)||(strcmp(token[0], "NOCONTENT")==0)){ 
 			sprintf(message, "%s %s %s %s\n", token[0], token[1], token[2], token[3]);
 			if(strcmp(host->self.id, token[1])==0)
-				printf(message);
+				printf("%s",message);
 			else
 				write(host->external.fd, message, strlen(message));
 
