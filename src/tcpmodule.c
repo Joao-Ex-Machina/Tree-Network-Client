@@ -30,11 +30,12 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 	ssize_t n=0;
 	struct addrinfo hints,*res=NULL;
 	char *buffer=(char*)malloc(128*sizeof(char));
-	char* token[3];
+	memset(buffer, '\0', 128*sizeof(char));
+	char* token[4];
 	printf("%s %s\n",id,bootid);
 	printf("ENTREI NO DJOIN\n");
 	
-	for (i=0; i<3; i++)
+	for (i=0; i<4; i++)
 		token[i]=(char*)malloc(128*(sizeof(char)));
 	printf("acabei setup\n");
 	printf("comparei os dois : %d \n", strcmp(id, bootid));
@@ -74,11 +75,13 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 			printf("ERROR: Something went wrong :/ ABORTING!");
 			/*error*/exit(1);
 		}
+		memset(buffer, '\0', 128*sizeof(char));
 		sprintf(buffer,"NEW %s %s %s\n",node->self.id, node->self.IP ,node->self.TCPport);
 		n=write(fd, buffer, strlen(buffer));
 		printf("Mandei isto: %s\n", buffer);
 		if(n==-1)
 			/*error*/exit(1);
+		memset(buffer, '\0', 128*sizeof(char));
 		n=read(fd,buffer,128);
 		if(n==-1)
 			/*error*/exit(1);
@@ -86,10 +89,10 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 		printf("O tipo disse mesmo: %s\n",buffer);
 		/*processar EXTERN*/
 		i=0;
-		token[0]=strtok(buffer,"\n");
-		token[i]=strtok(token[0], " ");
+		buffer=strtok(buffer,"\n");
+		token[0]=strtok(buffer, " ");
 		while(token[i]!=NULL){
-			if (i > 2)
+			if (i > 3)
 				break;
 			i++;
 			token[i]=strtok(NULL, " ");
@@ -98,10 +101,10 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 			printf("ERROR\n");
 			exit(1);
 		}
-	printf("I got this: %s %s %s\n", token[1], token[2], buffer);	
+	printf("I got this: %s %s %s\n", token[1], token[2], token[3]);	
 	node->backup.id=token[1];
 	node->backup.IP=token[2];
-	node->backup.TCPport=buffer;
+	node->backup.TCPport=token[3];
 	if(n==-1)
 		/*error*/exit(1);
 	}
@@ -118,25 +121,24 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 }
 
 int handshake(netnode *host,addrinfo hints, addrinfo *res, sockaddr_in addr,char *buffer,fd_set rfds){
-	char* token[3]; /*função*/
+	char* token[4]; /*função*/
 	char message[128];
 	int newfd=0,i=0;
 	char* buffer2 = strdup(buffer); // dup buffer to avoid writing on top of other data. Will probably fix in another version
 	netnode* aux=host;
 			printf("ENTER HANDSHAKE\n");
-			for (i=0; i<3; i++)
+			for (i=0; i<4; i++)
 				token[i]=(char*)malloc(128*(sizeof(char)));
 			FD_CLR(host->TCPsocket, &rfds);
 			socklen_t addrlen = sizeof (addr);
 			if ((newfd = accept (host->TCPsocket, (struct sockaddr*)&addr, &addrlen)) == -1)
 			  return newfd;
-
 			read(newfd, buffer2, 128);
 			i=0;
-			buffer=strtok(buffer2, "\n");
+			buffer2=strtok(buffer2, "\n");
 			token[i]=strtok(buffer2, " ");
 			while(token[i]!=NULL){
-				if (i > 2)
+				if (i > 3)
 					break;
 				i++;
 				token[i]=strtok(NULL, " ");
@@ -163,18 +165,18 @@ int handshake(netnode *host,addrinfo hints, addrinfo *res, sockaddr_in addr,char
 				aux->interns->brother=(entry*)malloc(sizeof(entry));
 				aux->interns=aux->interns->brother;
 			}
-			strcpy(buffer, strtok(buffer2, "\n"));
-			aux->interns->IP=token[1];
-			aux->interns->id=token[2];
-			aux->interns->TCPport=buffer2;
+			
+			aux->interns->IP=token[2];
+			aux->interns->id=token[1];
+			aux->interns->TCPport=token[3];
 			aux->interns->fd=newfd; /*Passar por referência*/
 			aux=host;
 			/* Caso host->backup.id == host->self.id*/
 			/*Copiar estes aux->interns todos para o backup*/
 			if(strcmp(host->external.id, host->self.id)==0){
-				host->external.IP=token[1];
-				aux->external.id=token[2];
-				aux->external.TCPport=buffer2;
+				host->external.IP=token[2];
+				aux->external.id=token[1];
+				aux->external.TCPport=token[3];
 				aux->external.fd=newfd;
 			}
 

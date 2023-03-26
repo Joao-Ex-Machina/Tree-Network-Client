@@ -76,13 +76,16 @@ int main (int argc, char *argv[]){
 		maxfd=host->TCPsocket;
 		if(host->external.IP !=NULL){
 			FD_SET(host->external.fd, &(host->rfds));
-			maxfd=host->external.fd;
+			if(host->external.fd>maxfd)
+				maxfd=host->external.fd;
 		}
 		aux=host->interns;
 		while(aux!=NULL){
 			FD_SET(aux->fd, &(host->rfds));
 			if(aux->fd>maxfd)
 				maxfd=aux->fd;
+
+			aux=aux->brother;
 
 		}
 		
@@ -96,6 +99,7 @@ int main (int argc, char *argv[]){
 			if (FD_ISSET (host->TCPsocket, &(host->rfds))){
 				printf("alguém quer-se registar\n");
 				newfd=handshake(host, hints, res, addr,buffer,host->rfds);
+				FD_CLR(host->TCPsocket, &(host->rfds));
 			}
 
 			if (FD_ISSET (host->external.fd, &(host->rfds))){
