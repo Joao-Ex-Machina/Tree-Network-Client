@@ -149,8 +149,6 @@ bool Is_ValidPort(const char *candidate){
 
 
 void host_exit(netnode *host){
-	char in;
-	entry *aux=NULL, *aux2=NULL;
 	if(host->is_connected){
 		printf("[INFO]: Host is still connected to a network\n");
 		printf("[INFO]: Will force exit. This will leave the network first.");
@@ -298,3 +296,44 @@ void proc_intern(netnode *host, entry *intern, entry *prev){
 
 }
 
+void proc_contact(netnode *host, char *buffer, char *message){
+	entry *aux=host->interns;
+	int i=0;	
+	char *token[4];
+	buffer=strtok(buffer, "\n");
+	token[i]=strtok(buffer, " ");
+	
+	while(token[i]!=NULL){
+		if (i > 3)
+			break;
+		i++;
+		token[i]=strtok(NULL, " ");
+	}
+
+	if(strcmp(token[0], "QUERY")==0){
+		if(strcmp(host->self.id, token[1])==0)
+			search_content(host, token[1], token[2], token[3]);
+		else
+			query_content(host, token[1], token[2], token[3]);
+		return;
+	}
+
+	else if(strcmp(token[0], "WITHDRAW")==0){
+		aux=host->interns;
+		while(aux!=NULL){
+			sprintf(message, "WITHDRAW %s\n", token[1]);
+			write(aux->fd,message,sizeof(message));
+		}
+		free(message);
+		return;		
+	}
+
+	if((strcmp(token[0], "CONTENT")==0)||(strcmp(token[0], "NOCONTENT")==0)){ 
+		sprintf(message, "%s %s %s %s\n", token[0], token[1], token[2], token[3]);
+		if(strcmp(host->self.id, token[1])==0)
+			printf("%s",message);
+		else
+			write(host->external.fd, message, strlen(message));
+
+	}
+}

@@ -1,4 +1,5 @@
 #include "content.h"
+#include "netstruct.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -67,16 +68,22 @@ void query_content(netnode *host, char *dest, char *origin, char * query){
 		printf("[INFO]: Cannot query while outside a network");
 		return;
 	}
+	int fd=search_neighbour(host, dest);
 	sprintf(message, "QUERY %s %s %s\n", dest, origin, query);/*acaba aqui*/
-	while (aux != NULL){
-		write(aux->fd, message, strlen(message));
-		aux=aux->brother;
+	if(fd==-1){
+		while (aux != NULL){
+			write(aux->fd, message, strlen(message));
+			aux=aux->brother;
+		}
 	}
+	else
+		write (fd, message, strlen(message));
 	free(message);
 	return;
 }
+
 void search_content(netnode *host, char *dest, char *origin, char *query){
-	container *aux=host->content_list;
+	struct container *aux=host->content_list;
 	bool query_exists=false;
 	char *message=(char*)malloc(128*sizeof(char));
 	while(aux!=NULL){
@@ -98,4 +105,68 @@ void search_content(netnode *host, char *dest, char *origin, char *query){
 	write(host->external.fd, message, strlen(message));
 	free(message);
 	return;
+}
+
+void add_neighbour(netnode *host, char *dest, char *neighbour, int fd){
+	struct routing_entry *aux=host->routing_list, *aux2=host->routing_list;
+	if (aux==NULL){
+		aux=(routing_entry *)calloc(1,sizeof(routing_entry));
+		aux->dest=dest;
+		aux->neighbour=neighbour;
+		aux->fd=fd;
+		return;
+
+	}
+	while (aux!=NULL){
+		aux2=aux;
+		aux=aux->next;
+	}
+	
+	aux=(routing_entry *)calloc(1,sizeof(routing_entry));
+	aux->dest=dest;
+	aux->neighbour=neighbour;
+	aux->fd=fd;
+	aux2->next=aux;
+	return;
+
+}
+
+void remove_routing(netnode *host, char *candidate){
+	struct routing_entry *aux=host->routing_list, *aux2=host->routing_list;
+	while(aux!=NULL){
+		if((strcmp(aux->dest, candidate)==0)||(strcmp(aux->neighbour, candidate)==0)){
+			aux2->next=aux->next;
+			free(aux);
+		}
+
+		aux2=aux;
+		aux=aux->next;
+	}
+	return;
+}
+
+void clear_routing(netnode *host){
+	struct routing_entry *aux=host->routing_list, *aux2=host->routing_list;
+	while(aux!=NULL){
+		aux2=aux->next;
+		free(aux);
+		aux=aux2;
+	}
+	return; 
+
+}
+
+
+int search_neighbour(netnode *host, char *dest){
+	routing_entry *aux=host->routing_list;
+	int fd=-1;
+	while(aux!=NULL){
+		if(strcmp(dest, aux->dest)==0){
+			fd=aux->fd;
+			break;
+		}
+		aux=aux->next;
+
+	}
+	return fd;
 }

@@ -10,5 +10,6 @@ void remove_content(netnode *host, char* candidate);
 void show_names(netnode *host);
 void query_content(netnode *host, char *dest, char *origin, char * query);
 void search_content(netnode *host, char *dest, char *origin, char *query);
+int search_neighbour(netnode *host, char *dest);
 #endif
 

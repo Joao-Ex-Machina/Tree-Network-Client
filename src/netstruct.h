@@ -2,6 +2,7 @@
 #define _NETSTRUCT_H_
 #include <stdbool.h>
 #include <netdb.h>
+
 typedef struct entry{
 	struct entry *brother;
 	char *id;
@@ -17,6 +18,13 @@ typedef struct container{
 	struct container *next;
 }container;
 
+typedef struct routing_entry{
+	struct routing_entry *next;
+	char *dest;
+	char *neighbour;
+	int fd;
+}routing_entry;
+
 typedef struct netnode{
 	fd_set rfds;
 	bool is_connected;
@@ -30,6 +38,8 @@ typedef struct netnode{
 	struct entry external;
 	struct entry* interns;
 	struct container *content_list; 
+	struct container *query_list;
+	struct routing_entry *routing_list;
 }netnode;
 
 

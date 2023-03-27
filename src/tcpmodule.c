@@ -75,7 +75,7 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 			printf("ERROR: Cannot Connect to node or network. Please clear this network or choose a new one.");
 			node->is_connected=true;
 			leave(node);
-			/*error*/exit(1);
+			return;
 		}
 		memset(buffer, '\0', 128*sizeof(char));
 		sprintf(buffer,"NEW %s %s %s\n",node->self.id, node->self.IP ,node->self.TCPport);
@@ -223,7 +223,6 @@ bool leave(netnode *host){
 	int errcode=getaddrinfo(host->serverIP,host->serverUDP,&hints,&res);
 	if(errcode!=0)
 		/*error*/ exit(1);
-	int fd =host->UDPsocket;
 	sprintf(message, "UNREG %s %s\n", host->net, host->self.id);
 	printf("host: %s\n", message);
 	sendto(host->UDPsocket, message, strlen(message),0,res->ai_addr,res->ai_addrlen);
@@ -244,7 +243,7 @@ bool leave(netnode *host){
 		free(aux);
 		aux=next;
 	}
-	if(strcmp(host->self.id,host->external.id)!=0)
+	if((host->external.fd)!=-1)
 		close(host->external.fd); /*close socket*/
 	host->is_connected=false;
 	host->external.IP=NULL; /*Reset variables to initial state*/

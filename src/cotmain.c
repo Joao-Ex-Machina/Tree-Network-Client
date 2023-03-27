@@ -9,7 +9,9 @@
 #include <sys/select.h>
 #include <signal.h>
 int main (int argc, char *argv[]){
-	sigaction(SIGPIPE, &((struct sigaction){SIG_IGN}), NULL);
+	struct sigaction act = {.sa_handler = SIG_IGN};
+    	if (sigaction(SIGPIPE, &act, NULL) == -1)
+        	exit(-1);
 	struct netnode *host=NULL;
 	ssize_t n=0;
 	socklen_t addrlen=0;
@@ -17,8 +19,7 @@ int main (int argc, char *argv[]){
 	struct sockaddr_in addr;
 	char buffer[128];
 	struct entry *aux=NULL;
-	int fd=0, errcode=0, newfd=0, afd = 0;
-	fd_set rfds;
+	int fd=0, errcode=0, newfd=0;
 	int maxfd=0, counter=0;
 
 	char *regUDP, *regIP, *tcp_port, *IP;

@@ -51,7 +51,7 @@ entry* UDPquery (netnode *host, char *net,char* regIP, char* regUDP){
 	struct addrinfo *res;
  	struct sockaddr_in addr;
 	socklen_t addrlen=sizeof(addr);
-	int n=0,n_lines = 0;
+	int n=0;
 	int chosen_line = 0; 
 	int errcode=getaddrinfo(regIP,regUDP,&hints,&res);
 	if(errcode!=0) /*error*/ exit(1);
