@@ -83,6 +83,7 @@ int main (int argc, char *argv[]){
 		}
 		aux=host->interns;
 		while(aux!=NULL){
+			printf("Tenho internos não nulos");
 			FD_SET(aux->fd, &(host->rfds));
 			if(aux->fd>maxfd)
 				maxfd=aux->fd;
@@ -119,6 +120,7 @@ int main (int argc, char *argv[]){
 			}
 
 			aux=host->interns;
+			aux2=host->interns;
 			while(aux!=NULL){
 				if(FD_ISSET (aux->fd, &(host->rfds))){
 					FD_CLR(aux->fd, &(host->rfds));

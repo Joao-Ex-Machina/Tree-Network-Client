@@ -107,6 +107,10 @@ void proc_stdin(char* buffer, netnode *host){
 		clear_routing(host);
 		return;
 	}
+	else if((strcmp(token[0],"sr")==0)|| ((strcmp(token[0],"show")==0)&&(strcmp(token[1],"routing")==0))){
+		show_routing(host);
+		return;
+	}
 	else if(strcmp(token[0], "leave")==0){
 		if(leave(host)){
 			printf("[FAULT]: Leave failed");
@@ -167,6 +171,10 @@ void host_exit(netnode *host){
 }
 void show_topology(netnode *host){
 	entry *aux=NULL;
+	if(!host->is_connected){
+		printf("[INFO]: You need to be connected to a network to show topology\n");
+		return;
+	}
 	printf("EXTERNAL\n");
 	printf("%s %s %s\n", host->external.id, host->external.IP, host->external.TCPport);
 	printf("BACKUP\n");
@@ -258,11 +266,22 @@ void proc_extern(netnode *host){
 
 void proc_intern(netnode *host, entry *intern, entry *prev){
 	char *buffer=(char*)malloc(128*sizeof(char));
+	entry *aux=NULL;
 	int n=read(intern->fd,buffer,128);
 	if(n==0){ /*intern left*/
-		prev->brother=intern->brother;
+		if(intern!=host->interns)
+			prev->brother=intern->brother;
+		else{
+			close(intern->fd);
+			free(intern);
+			host->interns=NULL;
+			return;
+
+		}
 		close(intern->fd);
-		free(intern); /*so many lost blocks*/
+		aux=intern;
+		intern=NULL;
+		free(aux); /*so many lost blocks*/
 	}
 	else
 		proc_contact(host, buffer, intern->id, intern->fd);

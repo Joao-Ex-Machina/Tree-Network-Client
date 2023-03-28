@@ -114,6 +114,7 @@ void add_neighbour(netnode *host, char *dest, char *neighbour, int fd){
 		aux->dest=dest;
 		aux->neighbour=neighbour;
 		aux->fd=fd;
+		host->routing_list=aux;
 		return;
 
 	}
@@ -148,13 +149,24 @@ void remove_routing(netnode *host, char *candidate){
 }
 
 void clear_routing(netnode *host){
+	entry *aux3=host->interns;
+	if(!host->is_connected){
+		printf("Must be connect to a network to show routing");
+		return;
+	}
 	struct routing_entry *aux=host->routing_list, *aux2=host->routing_list;
 	while(aux!=NULL){
 		aux2=aux->next;
 		free(aux);
 		aux=aux2;
 	}
-	return; 
+	printf("[INFO]: Routing cleared! Reloading external and internal routes\n");
+	add_neighbour(host, host->external.id, host->external.id, host->external.fd);
+	while(aux3!=NULL){
+		add_neighbour(host, aux3->id, aux3->id, aux3->fd);
+		aux3=aux3->brother;
+	}
+	printf("[INFO]: Base routes reloaded.\n");
 
 }
 
