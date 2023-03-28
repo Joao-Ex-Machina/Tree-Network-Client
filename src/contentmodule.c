@@ -110,16 +110,16 @@ void search_content(netnode *host, char *dest, char *origin, char *query){
 void add_neighbour(netnode *host, char *dest, char *neighbour, int fd){
 	struct routing_entry *aux=host->routing_list, *aux2=host->routing_list;
 	if (aux==NULL){
-		aux=(routing_entry *)calloc(1,sizeof(routing_entry));
+		host->routing_list=(routing_entry *)calloc(1,sizeof(routing_entry));
+		aux=host->routing_list;
 		aux->dest=dest;
 		aux->neighbour=neighbour;
 		aux->fd=fd;
-		host->routing_list=aux;
 		return;
 
 	}
 	while (aux!=NULL){
-		if(strcmp(aux->dest, dest)==0 && strcmp(aux->neighbour, neighbour))
+		if(strcmp(aux->dest, dest)==0 && strcmp(aux->neighbour, neighbour)==0)
 			return; /*there is already a entry with this info*/
 		aux2=aux;
 		aux=aux->next;

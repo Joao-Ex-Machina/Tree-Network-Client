@@ -213,12 +213,19 @@ void proc_extern(netnode *host){
 			host->external.fd=host->interns->fd;
 			aux=host->interns;
 			host->interns=host->interns->brother;
+			sprintf(message, "EXTERN %s %s %s\n", host->external.id, host->external.IP, host->external.TCPport);
+			write(host->external.fd, message, strlen(message)); /*anchor is now its own backup*/
+
 			free(aux); /*better free here*/ /*its no longer an intern*/
 		}
 		else{
 			host->external.id=host->self.id; /*no one to anchor, alone again*/
 			host->external.IP=host->self.IP;
 			host->external.TCPport=host->self.TCPport;
+			host->backup.id=host->self.id;
+			host->backup.IP=host->self.IP;
+			host->backup.id=host->self.id;
+			host->backup.TCPport=host->self.TCPport;
 			host->external.fd=-1;
 
 		}
