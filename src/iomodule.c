@@ -103,7 +103,10 @@ void proc_stdin(char* buffer, netnode *host){
 		show_names(host);
 		return;
 	}
-
+	else if((strcmp(token[0],"cr")==0)|| ((strcmp(token[0],"clear")==0)&&(strcmp(token[1],"routing")==0))){
+		clear_routing(host);
+		return;
+	}
 	else if(strcmp(token[0], "leave")==0){
 		if(leave(host)){
 			printf("[FAULT]: Leave failed");
@@ -207,7 +210,7 @@ void proc_extern(netnode *host){
 			host->external.id=host->self.id; /*no one to anchor, alone again*/
 			host->external.IP=host->self.IP;
 			host->external.TCPport=host->self.TCPport;
-			host->external.fd=host->self.fd;
+			host->external.fd=-1;
 
 		}
 		/*spread information*/
@@ -257,6 +260,7 @@ void proc_intern(netnode *host, entry *intern, entry *prev){
 	int n=read(intern->fd,buffer,128);
 	if(n==0){ /*intern left*/
 		prev->brother=intern->brother;
+		close(intern->fd);
 		free(intern); /*so many lost blocks*/
 	}
 	else
@@ -295,7 +299,7 @@ void proc_contact(netnode *host, char *buffer, char *in_id, int in_fd){
 		sprintf(message, "WITHDRAW %s\n", token[1]);
 		while(aux!=NULL){
 			if((aux->fd)!=in_fd)
-			write(aux->fd,message,sizeof(message));
+				write(aux->fd,message,sizeof(message));
 		}
 		if((host->external.fd)!=in_fd)
 			write(aux->fd,message,sizeof(message));

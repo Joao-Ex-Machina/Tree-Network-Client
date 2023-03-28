@@ -18,7 +18,7 @@ int main (int argc, char *argv[]){
 	struct addrinfo hints, *res=NULL;
 	struct sockaddr_in addr;
 	char buffer[128];
-	struct entry *aux=NULL;
+	struct entry *aux=NULL, *aux2=NULL;
 	int fd=0, errcode=0, newfd=0;
 	int maxfd=0, counter=0;
 
@@ -73,9 +73,10 @@ int main (int argc, char *argv[]){
 		FD_ZERO (&(host->rfds));
 		printf("entrei no while\n");
 		FD_SET(0,&(host->rfds));
+		maxfd=2;
 		FD_SET(host->TCPsocket, &(host->rfds));
 		maxfd=host->TCPsocket;
-		if(host->external.IP !=NULL){
+		if(host->external.fd !=-1){
 			FD_SET(host->external.fd, &(host->rfds));
 			if(host->external.fd>maxfd)
 				maxfd=host->external.fd;
@@ -91,6 +92,7 @@ int main (int argc, char *argv[]){
 		}
 		
 		/*tenho que dar fix disto*/
+		printf("maxfd: %d\n", maxfd);
 		counter =select (maxfd + 1, &(host->rfds), (fd_set *) NULL, (fd_set *) NULL,(struct timeval *) NULL);
 		printf("counter: %d\n", counter);
 		if (counter <= 0)
@@ -121,7 +123,9 @@ int main (int argc, char *argv[]){
 				if(FD_ISSET (aux->fd, &(host->rfds))){
 					FD_CLR(aux->fd, &(host->rfds));
 					printf("Um interno (%s) apitou", aux->id);
+					proc_intern(host, aux, aux2);
 				}
+				aux2=aux;
 				aux=aux->brother;
 			}
 

@@ -1,6 +1,7 @@
 #include "netstruct.h"
 #include "tcp.h"
 #include "udp.h"
+#include "content.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
@@ -115,6 +116,7 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 	node->external.IP=bootIP;
 	node->external.TCPport=bootTCP;
 	node->external.id=bootid;
+	add_neighbour(node, bootid, bootid,fd);
 	node->is_connected=true;
 	printf("A sair do djoin\n");
 
@@ -162,6 +164,7 @@ int handshake(netnode *host,addrinfo hints, addrinfo *res, sockaddr_in addr,char
 				aux->external.id=token[1];
 				aux->external.TCPport=token[3];
 				aux->external.fd=newfd;
+
 			}
 			else{
 				if(aux->interns==NULL){
@@ -173,18 +176,18 @@ int handshake(netnode *host,addrinfo hints, addrinfo *res, sockaddr_in addr,char
 
 					}
 
-				aux->interns->brother=(entry*)malloc(sizeof(entry));
-				aux->interns=aux->interns->brother;
-			}
+					aux->interns->brother=(entry*)malloc(sizeof(entry));
+					aux->interns=aux->interns->brother;
+				}
 			
-			aux->interns->IP=token[2];
-			aux->interns->id=token[1];
-			aux->interns->TCPport=token[3];
-			aux->interns->fd=newfd; /*Passar por referência*/
-			aux=host;
-
+				aux->interns->IP=token[2];
+				aux->interns->id=token[1];
+				aux->interns->TCPport=token[3];
+				aux->interns->fd=newfd; /*Passar por referência*/
+				aux=host;
 			}
 
+			add_neighbour(host, token[1], token[1],newfd);
 			sprintf(message, "EXTERN %s %s %s\n", host->external.id, host->external.IP, host->external.TCPport);/*acaba aqui*/
 			write(newfd, message, strlen(message));
 			printf("Adeus!\n");

@@ -158,6 +158,21 @@ void clear_routing(netnode *host){
 
 }
 
+void show_routing(netnode *host){
+	struct routing_entry *aux=host->routing_list;
+	if(aux==NULL){
+		printf("[INFO]: No routing entries\n");
+		return;
+	}
+	printf("--[START OF ROUTING LIST]--\n");
+	printf("---[Destiny | Neighbour]---\n");
+	while(aux!=NULL){
+		printf("[%s | %s]\n", aux->dest, aux->neighbour);
+		aux=aux->next;
+	}
+	printf("--[END OF ROUTING LIST]--\n");
+	return;
+}
 
 int search_neighbour(netnode *host, char *dest){
 	routing_entry *aux=host->routing_list;

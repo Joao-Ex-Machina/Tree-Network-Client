@@ -140,20 +140,23 @@ bool UDPreg(netnode *host, char *net, char *id,char* regIP, char* regUDP){
 		printf("%s",id);
 		printf("%s",id);
 		sendto(host->UDPsocket, message,strlen(message),0, res->ai_addr,res->ai_addrlen);
-
-
 		printf("registei\n");
 		recvfrom(host->UDPsocket, buffer, 6,0,(struct sockaddr*)&addr, &addrlen);
+		shutdown(host->UDPsocket, SHUT_RDWR);
 		printf("servidor: %s\n",buffer);
 		if(strcmp(buffer, "OKREG")==0){
+			
 			printf("O Server aceitou\n");
 			regflag=1;
 			host->net=net;
 			host->self.id=id;
 			free(buffer);
+			shutdown(host->UDPsocket, SHUT_RDWR);
 			return 0;
 		}
+
 		else{
+
 			id_int=atoi(id);
 			id_int++;
 			if(id_int==100)
@@ -162,10 +165,8 @@ bool UDPreg(netnode *host, char *net, char *id,char* regIP, char* regUDP){
 				free(buffer);
 				return 1;
 			}
+			shutdown(host->UDPsocket, SHUT_RDWR);
 			sprintf(id, "%2d",id_int);
-
-		
-						
 		}
 	
 	
