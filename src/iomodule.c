@@ -192,6 +192,7 @@ void proc_extern(netnode *host){
 	int i=0;
 	entry *aux=host->interns;
 	int n=read(host->external.fd,buffer,128);
+	char *buffer2=strdup(buffer);
 	if(n==0 || n==-1){
 		/*extern disconected*/
 		close(host->external.fd);
@@ -226,7 +227,6 @@ void proc_extern(netnode *host){
 		return;
 	}
 	else{
-		char *buffer2=strdup(buffer);
 		token[i]=strtok(buffer, " ");
 		while(token[i]!=NULL){
 			if (i > 3)
@@ -242,6 +242,7 @@ void proc_extern(netnode *host){
 			return;		
 		}
 		else if ((strcmp(token[0], "QUERY")==0)|| (strcmp(token[0], "WITHDRAW")==0)|| (strcmp(token[0], "CONTENT")==0) || (strcmp(token[0], "NOCONTENT")==0)){
+			printf("%s\n",buffer2);
 			proc_contact(host, buffer2, host->external.id, host->external.fd);
 
 		}
@@ -275,6 +276,7 @@ void proc_contact(netnode *host, char *buffer, char *in_id, int in_fd){
 	int i=0;	
 	char *token[4];
 	buffer=strtok(buffer, "\n");
+	printf("%s",buffer);
 	token[i]=strtok(buffer, " ");
 	
 	while(token[i]!=NULL){
