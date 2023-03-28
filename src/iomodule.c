@@ -223,7 +223,7 @@ void proc_extern(netnode *host){
 		return;
 	}
 	else{
-		buffer=strtok(buffer, "\n");
+		char *buffer2=strdup(buffer);
 		token[i]=strtok(buffer, " ");
 		while(token[i]!=NULL){
 			if (i > 3)
@@ -231,32 +231,18 @@ void proc_extern(netnode *host){
 			i++;
 			token[i]=strtok(NULL, " ");
 		}
-
-		if(strcmp(token[0], "QUERY")==0){
-			if(strcmp(host->self.id, token[1])==0)
-				search_content(host, token[1], token[2], token[3]);
-			else
-			
-				query_content(host, token[1], token[2], token[3]);
-			return;
-		}
-
-		else if(strcmp(token[0], "WITHDRAW")==0){
-			aux=host->interns;
-			while(aux!=NULL){
-				sprintf(message, "WITHDRAW %s\n", token[1]);
-				write(aux->fd,message,sizeof(message));
-			}
-			free(message);
-			return;		
-		}
-		
-		else if(strcmp(token[0], "EXTERN")==0){
+	
+		if(strcmp(token[0], "EXTERN")==0){
 			host->backup.id=token[1];
 			host->backup.IP=token[2];
 			host->backup.TCPport=token[3];
 			return;		
 		}
+		else if ((strcmp(token[0], "QUERY")==0)|| (strcmp(token[0], "WITHDRAW")==0)|| (strcmp(token[0], "CONTENT")==0) || (strcmp(token[0], "NOCONTENT")==0)){
+			proc_contact(host, buffer2, host->external.id, host->external.fd);
+
+		}
+
 		else{
 			printf("[FAULT]: Unknown contact from external node");
 			return;
@@ -267,37 +253,21 @@ void proc_extern(netnode *host){
 }
 
 void proc_intern(netnode *host, entry *intern, entry *prev){
-	char *buffer=(char*)malloc(128*sizeof(char)), *message=(char*)malloc(128*sizeof(char));
-	char *token[4];
-	int i=0;
+	char *buffer=(char*)malloc(128*sizeof(char));
 	int n=read(intern->fd,buffer,128);
 	if(n==0){ /*intern left*/
 		prev->brother=intern->brother;
 		free(intern); /*so many lost blocks*/
 	}
-
-	buffer=strtok(buffer, "\n");
-	token[i]=strtok(buffer, " ");
-	while(token[i]!=NULL){
-		if (i > 3)
-			break;
-		i++;
-		token[i]=strtok(NULL, " ");
-		}
-
-	if((strcmp(token[0], "CONTENT")==0)||(strcmp(token[0], "NOCONTENT")==0)){ 
-			sprintf(message, "%s %s %s %s\n", token[0], token[1], token[2], token[3]);
-			if(strcmp(host->self.id, token[1])==0)
-				printf("%s",message);
-			else
-				write(host->external.fd, message, strlen(message));
-
-	}
-
+	else
+		proc_contact(host, buffer, intern->id, intern->fd);
+	return;
 }
 
-void proc_contact(netnode *host, char *buffer, char *message){
+
+void proc_contact(netnode *host, char *buffer, char *in_id, int in_fd){
 	entry *aux=host->interns;
+	char *message=(char*)malloc(128*sizeof(char));
 	int i=0;	
 	char *token[4];
 	buffer=strtok(buffer, "\n");
@@ -315,15 +285,20 @@ void proc_contact(netnode *host, char *buffer, char *message){
 			search_content(host, token[1], token[2], token[3]);
 		else
 			query_content(host, token[1], token[2], token[3]);
+		add_neighbour(host, token[2], in_id, in_fd);
 		return;
 	}
 
 	else if(strcmp(token[0], "WITHDRAW")==0){
 		aux=host->interns;
+		remove_routing(host, token[1]);
+		sprintf(message, "WITHDRAW %s\n", token[1]);
 		while(aux!=NULL){
-			sprintf(message, "WITHDRAW %s\n", token[1]);
+			if((aux->fd)!=in_fd)
 			write(aux->fd,message,sizeof(message));
 		}
+		if((host->external.fd)!=in_fd)
+			write(aux->fd,message,sizeof(message));
 		free(message);
 		return;		
 	}
@@ -334,6 +309,7 @@ void proc_contact(netnode *host, char *buffer, char *message){
 			printf("%s",message);
 		else
 			write(host->external.fd, message, strlen(message));
+		add_neighbour(host, token[2], in_id, in_fd);
 
 	}
 }

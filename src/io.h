@@ -11,5 +11,7 @@ bool Is_ValidPort(const char *candidate);
 void show_topology(netnode *host);
 void host_exit(netnode *host);
 void proc_extern(netnode *host);
+void proc_intern(netnode *host, entry *intern, entry *prev);
+void proc_contact(netnode *host, char *buffer, char *in_id, int in_fd);
 #endif
 
