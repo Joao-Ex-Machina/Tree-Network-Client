@@ -63,7 +63,7 @@ void show_names(netnode *host){
 
 void query_content(netnode *host, char *dest, char *origin, char * query){
 	char *message=(char*)malloc(128*(sizeof(char)));
-	entry *aux=host->interns;
+	routing_entry *aux=host->routing_list;
 	if(host->is_connected == false){
 		printf("[INFO]: Cannot query while outside a network");
 		return;
@@ -73,7 +73,7 @@ void query_content(netnode *host, char *dest, char *origin, char * query){
 	if(fd==-1){
 		while (aux != NULL){
 			write(aux->fd, message, strlen(message));
-			aux=aux->brother;
+			aux=aux->next;
 		}
 	}
 	else
@@ -102,7 +102,11 @@ void search_content(netnode *host, char *dest, char *origin, char *query){
 	else{
 		sprintf(message, "NOCONTENT %s %s %s\n", origin, dest, query);
 	}
-	write(host->external.fd, message, strlen(message));
+	int fd=search_neighbour(host, origin);
+	if(fd==-1)
+		printf("[INFO]: I have not queried this CONTENT");
+	else
+		write(fd, message, strlen(message));
 	free(message);
 	return;
 }
@@ -184,7 +188,7 @@ void show_routing(netnode *host){
 	printf("--[START OF ROUTING LIST]--\n");
 	printf("---[Destiny | Neighbour]---\n");
 	while(aux!=NULL){
-		printf("[%s | %s]\n", aux->dest, aux->neighbour);
+		printf("[%s | %s]->%d\n", aux->dest, aux->neighbour, aux->fd);
 		aux=aux->next;
 	}
 	printf("--[END OF ROUTING LIST]--\n");

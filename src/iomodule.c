@@ -149,7 +149,7 @@ bool Is_ValidPort(const char *candidate){
             return false;
     }
 
-    if (port >= 0 && port <= 65535) /*Port 0 is reserved for stdin, max TCP/UDP port is 65535*/
+    if (port >= 1023 && port <= 65535) /*Port 0 is reserved for stdin, max TCP/UDP port is 65535*/
         return true;
     return false;
 }
@@ -317,11 +317,11 @@ void proc_contact(netnode *host, char *buffer, char *in_id, int in_fd){
 
 	if(strcmp(token[0], "QUERY")==0){
 		printf("Eu sou o %s e tenho que contactar o %s \n", host->self.id, token[1]);
+		add_neighbour(host, token[2], in_id, in_fd);
 		if(strcmp(host->self.id, token[1])==0)
 			search_content(host, token[1], token[2], token[3]);
 		else
 			query_content(host, token[1], token[2], token[3]);
-		add_neighbour(host, token[2], in_id, in_fd);
 		return;
 	}
 
@@ -341,13 +341,13 @@ void proc_contact(netnode *host, char *buffer, char *in_id, int in_fd){
 
 	if((strcmp(token[0], "CONTENT")==0)||(strcmp(token[0], "NOCONTENT")==0)){ 
 		sprintf(message, "%s %s %s %s\n", token[0], token[1], token[2], token[3]);
+		add_neighbour(host, token[1], in_id, in_fd);
 		if(strcmp(host->self.id, token[1])==0)
 			printf("%s",message);
 		else{
 			int fd=search_neighbour(host,token[1]);
 			write(fd, message, strlen(message));
 		}
-		add_neighbour(host, token[2], in_id, in_fd);
-
+		
 	}
 }
