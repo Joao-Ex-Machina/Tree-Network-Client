@@ -125,7 +125,7 @@ void add_neighbour(netnode *host, char *dest, char *neighbour, int fd){
 
 	}
 	while (aux!=NULL){
-		if(strcmp(aux->dest, dest)==0 && strcmp(aux->neighbour, neighbour)==0)
+		if(strcmp(aux->dest, dest)==0)
 			return; /*there is already a entry with this info*/
 		aux2=aux;
 		aux=aux->next;

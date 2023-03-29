@@ -197,6 +197,7 @@ void show_topology(netnode *host){
 void proc_extern(netnode *host){
 	char *buffer=(char*)malloc(128*sizeof(char)), *message=(char*)malloc(128*sizeof(char));
 	char *token[4];
+	routing_entry *aux2=host->routing_list;
 	int i=0;
 	entry *aux=host->interns;
 	int n=read(host->external.fd,buffer,128);
@@ -204,6 +205,12 @@ void proc_extern(netnode *host){
 	if(n==0 || n==-1){
 		/*extern disconected*/
 		remove_routing(host, host->external.id);
+		while(aux2!=NULL){
+			sprintf(message, "WITHDRAW %s\n", host->external.id);
+			write(aux2->fd, message, strlen(message));
+			aux2=aux2->next;
+
+		}
 		close(host->external.fd);
 		if(strcmp(host->self.id, host->backup.id)!=0) /*im not an anchor*/
 			djoin(host->net, host->self.id, host->backup.id, host->backup.IP, host->backup.TCPport, host);
@@ -274,7 +281,9 @@ void proc_extern(netnode *host){
 
 void proc_intern(netnode *host, entry *intern, entry *prev){
 	char *buffer=(char*)malloc(128*sizeof(char));
+	char *message=(char*)malloc(128*sizeof(char));
 	entry *aux=NULL;
+	routing_entry *aux2=host->routing_list;
 	int n=read(intern->fd,buffer,128);
 	if(n==0){ /*intern left*/
 		if(intern!=host->interns)
@@ -284,6 +293,13 @@ void proc_intern(netnode *host, entry *intern, entry *prev){
 			close(intern->fd);
 			//free(intern);
 			host->interns=NULL;
+
+			while(aux2!=NULL){
+				sprintf(message, "WITHDRAW %s\n", intern->id);
+				write(aux2->fd, message, strlen(message));
+				aux2=aux2->next;
+
+			}
 			return;
 
 		}
@@ -339,9 +355,9 @@ void proc_contact(netnode *host, char *buffer, char *in_id, int in_fd){
 		return;		
 	}
 
-	if((strcmp(token[0], "CONTENT")==0)||(strcmp(token[0], "NOCONTENT")==0)){ 
+	else if((strcmp(token[0], "CONTENT")==0)||(strcmp(token[0], "NOCONTENT")==0)){ 
 		sprintf(message, "%s %s %s %s\n", token[0], token[1], token[2], token[3]);
-		add_neighbour(host, token[1], in_id, in_fd);
+		add_neighbour(host, token[2], in_id, in_fd);
 		if(strcmp(host->self.id, token[1])==0)
 			printf("%s",message);
 		else{
@@ -349,5 +365,9 @@ void proc_contact(netnode *host, char *buffer, char *in_id, int in_fd){
 			write(fd, message, strlen(message));
 		}
 		
+	}
+	else {
+		printf("[INFO]: Unknown Contact");
+		return;
 	}
 }
