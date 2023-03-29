@@ -109,7 +109,9 @@ void search_content(netnode *host, char *dest, char *origin, char *query){
 
 void add_neighbour(netnode *host, char *dest, char *neighbour, int fd){
 	struct routing_entry *aux=host->routing_list, *aux2=host->routing_list;
+	printf("Vamos começar a adicionar routes\n");
 	if (aux==NULL){
+		printf("Adicionar o primeiro bro\n");
 		host->routing_list=(routing_entry *)calloc(1,sizeof(routing_entry));
 		aux=host->routing_list;
 		aux->dest=dest;
@@ -139,11 +141,13 @@ void remove_routing(netnode *host, char *candidate){
 	while(aux!=NULL){
 		if((strcmp(aux->dest, candidate)==0)||(strcmp(aux->neighbour, candidate)==0)){
 			aux2->next=aux->next;
-			free(aux);
+			aux=NULL;
+			//free(aux);
 		}
 
 		aux2=aux;
-		aux=aux->next;
+		if(aux!=NULL)
+			aux=aux->next;
 	}
 	return;
 }
@@ -157,7 +161,8 @@ void clear_routing(netnode *host){
 	struct routing_entry *aux=host->routing_list, *aux2=host->routing_list;
 	while(aux!=NULL){
 		aux2=aux->next;
-		free(aux);
+		aux=NULL;
+		//free(aux);
 		aux=aux2;
 	}
 	printf("[INFO]: Routing cleared! Reloading external and internal routes\n");

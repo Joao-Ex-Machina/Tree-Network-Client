@@ -128,7 +128,7 @@ int handshake(netnode *host,addrinfo hints, addrinfo *res, sockaddr_in addr,char
 	char* token[4]; /*função*/
 	char message[128];
 	int newfd=0,i=0;
-	char* buffer2 = strdup(buffer); // dup buffer to avoid writing on top of other data. Will probably fix in another version
+	char* buffer2 = (char*)malloc(128*sizeof(char)); // dup buffer to avoid writing on top of other data. Will probably fix in another version
 	netnode* aux=host;
 			printf("ENTER HANDSHAKE\n");
 			for (i=0; i<4; i++)

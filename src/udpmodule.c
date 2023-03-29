@@ -120,7 +120,7 @@ entry* UDPquery (netnode *host, char *net,char* regIP, char* regUDP){
 bool UDPreg(netnode *host, char *net, char *id,char* regIP, char* regUDP){
 	bool regflag=0;
 	char message[128];
-	char *buffer=(char*)malloc(6*sizeof(char));
+	char *buffer=(char*)malloc(128*sizeof(char));
 	struct addrinfo hints={.ai_family = AF_INET, .ai_socktype = SOCK_STREAM};
 	struct addrinfo *res=NULL;
  	struct sockaddr_in addr;

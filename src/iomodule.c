@@ -203,6 +203,7 @@ void proc_extern(netnode *host){
 	char *buffer2=strdup(buffer);
 	if(n==0 || n==-1){
 		/*extern disconected*/
+		remove_routing(host, host->external.id);
 		close(host->external.fd);
 		if(strcmp(host->self.id, host->backup.id)!=0) /*im not an anchor*/
 			djoin(host->net, host->self.id, host->backup.id, host->backup.IP, host->backup.TCPport, host);
@@ -216,7 +217,7 @@ void proc_extern(netnode *host){
 			sprintf(message, "EXTERN %s %s %s\n", host->external.id, host->external.IP, host->external.TCPport);
 			write(host->external.fd, message, strlen(message)); /*anchor is now its own backup*/
 
-			free(aux); /*better free here*/ /*its no longer an intern*/
+			//free(aux); /*better free here*/ /*its no longer an intern*/
 		}
 		else{
 			host->external.id=host->self.id; /*no one to anchor, alone again*/
@@ -279,16 +280,18 @@ void proc_intern(netnode *host, entry *intern, entry *prev){
 		if(intern!=host->interns)
 			prev->brother=intern->brother;
 		else{
+			remove_routing(host, host->interns->id);
 			close(intern->fd);
-			free(intern);
+			//free(intern);
 			host->interns=NULL;
 			return;
 
 		}
+		remove_routing(host, host->interns->id);
 		close(intern->fd);
 		aux=intern;
 		intern=NULL;
-		free(aux); /*so many lost blocks*/
+		//free(aux); /*so many lost blocks*/
 	}
 	else
 		proc_contact(host, buffer, intern->id, intern->fd);
@@ -313,6 +316,7 @@ void proc_contact(netnode *host, char *buffer, char *in_id, int in_fd){
 	}
 
 	if(strcmp(token[0], "QUERY")==0){
+		printf("Eu sou o %s e tenho que contactar o %s \n", host->self.id, token[1]);
 		if(strcmp(host->self.id, token[1])==0)
 			search_content(host, token[1], token[2], token[3]);
 		else
@@ -339,8 +343,10 @@ void proc_contact(netnode *host, char *buffer, char *in_id, int in_fd){
 		sprintf(message, "%s %s %s %s\n", token[0], token[1], token[2], token[3]);
 		if(strcmp(host->self.id, token[1])==0)
 			printf("%s",message);
-		else
-			write(host->external.fd, message, strlen(message));
+		else{
+			int fd=search_neighbour(host,token[1]);
+			write(fd, message, strlen(message));
+		}
 		add_neighbour(host, token[2], in_id, in_fd);
 
 	}
