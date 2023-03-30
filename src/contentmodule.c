@@ -62,7 +62,7 @@ void show_names(netnode *host){
 	return;
 }
 
-void query_content(netnode *host, char *dest, char *origin, char * query){
+void query_content(netnode *host, char *dest, char *origin, char * query, int in_fd){
 	char *message=(char*)malloc(128*(sizeof(char)));
 	routing_entry *aux=host->routing_list;
 	if(host->is_connected == false){
@@ -70,10 +70,11 @@ void query_content(netnode *host, char *dest, char *origin, char * query){
 		return;
 	}
 	int fd=search_neighbour(host, dest);
-	sprintf(message, "QUERY %s %s %s\n", dest, origin, query);/*acaba aqui*/
+	sprintf(message, "QUERY %s %s %s\n", dest, origin, query); /*acaba aqui*/
 	if(fd==-1){
 		while (aux != NULL){
-			write(aux->fd, message, strlen(message));
+			if(aux->fd!=in_fd)
+				write(aux->fd, message, strlen(message));
 			aux=aux->next;
 		}
 	}
@@ -172,12 +173,15 @@ void clear_routing(netnode *host){
 		printf("[INFO]: Must be connect to a network to clear routing");
 		return;
 	}
+	if(host->routing_list==NULL)
+		return;
+
 	struct routing_entry *aux=host->routing_list, *aux2=host->routing_list;
 	while(aux!=NULL){
 		aux2=aux->next;
 		if(aux!=NULL)
 			//free(aux);
-		aux=NULL;
+			aux=NULL;
 		aux=aux2;
 	}
 	printf("[INFO]: Routing cleared! Reloading external and internal routes\n");
@@ -187,13 +191,13 @@ void clear_routing(netnode *host){
 		aux3=aux3->brother;
 	}
 	printf("[INFO]: Base routes reloaded.\n");
-
+	return;
 }
 
 void show_routing(netnode *host){
 	struct routing_entry *aux=host->routing_list;
 	if(!host->is_connected){
-		printf("[INFO]: Must be connect to a network to show routing");
+		printf("[INFO]: Must be connect to a network to show routing\n");
 		return;
 	}
 	if(aux==NULL){

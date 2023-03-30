@@ -13,13 +13,11 @@ int main (int argc, char *argv[]){
     	if (sigaction(SIGPIPE, &act, NULL) == -1)
         	exit(-1);
 	struct netnode *host=NULL;
-	ssize_t n=0;
-	socklen_t addrlen=0;
-	struct addrinfo hints, *res=NULL;
 	struct sockaddr_in addr;
+	struct addrinfo hints, *res=NULL;
 	char buffer[128];
 	struct entry *aux=NULL, *aux2=NULL;
-	int fd=0, errcode=0, newfd=0;
+	int newfd=0;
 	int maxfd=0, counter=0;
 
 	char *regUDP, *regIP, *tcp_port, *IP;
@@ -54,6 +52,7 @@ int main (int argc, char *argv[]){
 	printf("O meu servidor é %s na porta %s \n", regIP, regUDP);
 	/*QUICK HOST INITIALIZATION*/
 	host=(netnode*)malloc(sizeof(netnode));
+	host->TCPsocket=-1;
 	host->self.IP=IP;
 	host->self.TCPport=tcp_port;
 	host->self.UDPport=regUDP;
@@ -65,7 +64,6 @@ int main (int argc, char *argv[]){
 	host->interns=NULL;
 	
 	/*SOCKET INIT*/
-	host->TCPsocket=setTCP_server(tcp_port, fd, errcode, n, addrlen, hints, res, addr, buffer);
 	printf("Socket TCP: %d\n", host->TCPsocket);
 	host->UDPsocket=UDPconnect(regIP, regUDP);
 	printf("Socket UDP: %d\n", host->UDPsocket);
@@ -74,8 +72,11 @@ int main (int argc, char *argv[]){
 		printf("entrei no while\n");
 		FD_SET(0,&(host->rfds));
 		maxfd=2;
-		FD_SET(host->TCPsocket, &(host->rfds));
-		maxfd=host->TCPsocket;
+		if(host->TCPsocket!=-1){
+			FD_SET(host->TCPsocket, &(host->rfds));
+			if(host->TCPsocket>maxfd)
+				maxfd=host->TCPsocket;
+		}
 		if(host->external.fd !=-1){
 			FD_SET(host->external.fd, &(host->rfds));
 			if(host->external.fd>maxfd)

@@ -64,7 +64,7 @@ void proc_stdin(char* buffer, netnode *host){
 			return;
 		}
 		for(n=1; n<6;n++){
-			if(token[n]==NULL || (token[n]!=NULL && strcmp(token[n],"\0"))==0){
+			if(token[n]==NULL || (token[n]!=NULL && (strcmp(token[n],"\0")==0))){
 				printf("FAULT[001]: MISSING ARGUMENTS FOR COMMAND\n");
 				/*for (n=0; n<6; n++){
 					if(token[n]!=NULL)
@@ -95,7 +95,7 @@ void proc_stdin(char* buffer, netnode *host){
 		return;
 	}
 	else if (strcmp(token[0], "get")==0) {
-		query_content(host, token[1], host->self.id, token[2]);
+		query_content(host, token[1], host->self.id, token[2],-1);
 		return;
 	
 	}
@@ -143,8 +143,7 @@ bool Is_ValidIPv4(const char *candidate){
 bool Is_ValidPort(const char *candidate){
     int port = atoi(candidate);
     int len = strlen(candidate);
-    for (int i = 0; i < len; i++)
-    {
+    for (int i = 0; i < len; i++){
         if (candidate[i] < '0' || candidate[i] > '9')
             return false;
     }
@@ -342,7 +341,7 @@ void proc_contact(netnode *host, char *buffer, char *in_id, int in_fd){
 		if(strcmp(host->self.id, token[1])==0)
 			search_content(host, token[1], token[2], token[3]);
 		else
-			query_content(host, token[1], token[2], token[3]);
+			query_content(host, token[1], token[2], token[3], in_fd);
 		return;
 	}
 
@@ -371,7 +370,8 @@ void proc_contact(netnode *host, char *buffer, char *in_id, int in_fd){
 			printf("%s",message);
 		else{
 			int fd=search_neighbour(host,token[1]);
-			write(fd, message, strlen(message));
+			if(fd!=-1)
+				write(fd, message, strlen(message));
 		}
 		
 	}

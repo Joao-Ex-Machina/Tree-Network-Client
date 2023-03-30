@@ -7,7 +7,13 @@
 #include <string.h>
 #include <unistd.h>
 
-int setTCP_server (char *tcp_port, int fd, int errcode, ssize_t n, socklen_t addrlen,addrinfo hints, addrinfo * res, sockaddr_in addr, char *buffer){
+int setTCP_server (char *tcp_port){
+	int fd;
+	int errcode;
+	ssize_t n;
+	addrinfo hints;
+	addrinfo * res;
+
 	fd = socket (AF_INET, SOCK_STREAM, 0);	//TCP socket
 	if (fd == -1)
 		exit(1);			/*error */
@@ -88,7 +94,12 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 		n=read(fd,buffer,128);
 		if(n==-1)
 			/*error*/exit(1);
-
+		if(n==0){
+			printf("ERROR: Cannot Connect to node or network. Please clear this network or choose a new one.");
+			node->is_connected=true;
+			leave(node);
+			return;
+		}
 		printf("O tipo disse mesmo: %s\n",buffer);
 		/*processar EXTERN*/
 		i=0;
@@ -215,6 +226,7 @@ bool join (netnode *host, char *net, char *id){
 	else
 		djoin(net, id, data->id, data->IP, data->TCPport, host);
 	
+	host->TCPsocket=setTCP_server(host->self.TCPport);
 	return 0;
 }
 
@@ -257,9 +269,12 @@ bool leave(netnode *host){
 	}
 	if((host->external.fd)!=-1)
 		close(host->external.fd); /*close socket*/
+	if((host->TCPsocket)!=-1)
+		close(host->TCPsocket);
 	host->is_connected=false;
 	host->external.IP=NULL; /*Reset variables to initial state*/
 	host->external.fd=-1;
+	host->TCPsocket=-1;
 	host->interns=NULL;
 	return 0;
 }

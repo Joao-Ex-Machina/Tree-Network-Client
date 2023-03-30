@@ -55,6 +55,7 @@ entry* UDPquery (netnode *host, char *net,char* regIP, char* regUDP){
 	struct addrinfo *res;
  	struct sockaddr_in addr;
 	socklen_t addrlen=sizeof(addr);
+	int err=0;
 	int n=0;
 	int chosen_line = 0; 
 	int errcode=getaddrinfo(regIP,regUDP,&hints,&res);
@@ -69,7 +70,12 @@ entry* UDPquery (netnode *host, char *net,char* regIP, char* regUDP){
         	printf("[ERROR]: Connection to server timedout\n");
         	return NULL;
     	}
-	recvfrom(fd, buffer, 128,0,(struct sockaddr*)&addr, &addrlen);
+	err=recvfrom(fd, buffer, 128,0,(struct sockaddr*)&addr, &addrlen);
+	if (err==-1){
+		printf("[ERROR]: Connection to server timedout\n");
+        	return NULL;
+
+	}
 	printf("SERVER: %s\n", buffer);
 	buffercontrol=strtok(buffer, "\n"); /*IT WAS BUFFERCONTROL BEFORE HAVE TO CHECK IF ITS WORKING*/
 	connections[0]=buffer;
@@ -128,7 +134,7 @@ entry* UDPquery (netnode *host, char *net,char* regIP, char* regUDP){
 bool UDPreg(netnode *host, char *net, char *id,char* regIP, char* regUDP){
 	bool regflag=0;
 	char message[128];
-	char *buffer=(char*)malloc(128*sizeof(char));
+	char *buffer=(char*)calloc(1,128*sizeof(char));
 	struct addrinfo hints={.ai_family = AF_INET, .ai_socktype = SOCK_STREAM};
 	struct addrinfo *res=NULL;
  	struct sockaddr_in addr;
@@ -139,6 +145,7 @@ bool UDPreg(netnode *host, char *net, char *id,char* regIP, char* regUDP){
 	int errcode=getaddrinfo(regIP,regUDP,&hints,&res);
 	if(errcode!=0) /*error*/ exit(1);
 	int id_first=0;
+	int tries=0, n=0;
 	socklen_t addrlen=sizeof(addr);
 	id_int=atoi(id);
 	id_first=id_int;
@@ -152,11 +159,15 @@ bool UDPreg(netnode *host, char *net, char *id,char* regIP, char* regUDP){
 		printf("%s",id);
 		sendto(host->UDPsocket, message,strlen(message),0, res->ai_addr,res->ai_addrlen);
 		printf("registei\n");
+		
 		if (setsockopt(host->UDPsocket, SOL_SOCKET, SO_RCVTIMEO,&timeout,sizeof(timeout)) < 0) {
         		printf("[ERROR]: Connection to server timedout\n");
-        	return 1;
+ 		       	regflag=1;
+			return 1;
+
     		}
-		recvfrom(host->UDPsocket, buffer, 128,0,(struct sockaddr*)&addr, &addrlen);
+		n=recvfrom(host->UDPsocket, buffer, 128,0,(struct sockaddr*)&addr, &addrlen);
+		printf("%d",n);
 		printf("servidor: %s\n",buffer);
 		if((strcmp(buffer, "OKREG")==0)||((buffer[0]=='O')&&(buffer[1]=='K')&&(buffer[2]=='R')&&(buffer[3]=='E')&&(buffer[4]=='G'))){
 			
@@ -167,9 +178,19 @@ bool UDPreg(netnode *host, char *net, char *id,char* regIP, char* regUDP){
 			free(buffer);
 			return 0;
 		}
+		else if(n==-1){
+			if(tries >=5){
+				printf("[ERROR]: Connection to server timedout\n");
+ 		       		regflag=1;
+				return 1;
+
+
+			}
+			tries++;
+		}
 
 		else{
-
+			tries=0;
 			id_int=atoi(id);
 			id_int++;
 			if(id_int==100)
