@@ -113,9 +113,9 @@ void search_content(netnode *host, char *dest, char *origin, char *query){
 
 void add_neighbour(netnode *host, char *dest, char *neighbour, int fd){
 	struct routing_entry *aux=host->routing_list, *aux2=host->routing_list;
-	printf("Vamos começar a adicionar routes\n");
+	//printf("Vamos começar a adicionar routes\n");
 	if (aux==NULL){
-		printf("Adicionar o primeiro bro\n");
+		//printf("Adicionar o primeiro bro\n");
 		host->routing_list=(routing_entry *)calloc(1,sizeof(routing_entry));
 		aux=host->routing_list;
 		aux->dest=dest;
@@ -159,7 +159,7 @@ void remove_routing(netnode *host, char *candidate){
 void clear_routing(netnode *host){
 	entry *aux3=host->interns;
 	if(!host->is_connected){
-		printf("Must be connect to a network to show routing");
+		printf("[INFO]: Must be connect to a network to show routing");
 		return;
 	}
 	struct routing_entry *aux=host->routing_list, *aux2=host->routing_list;

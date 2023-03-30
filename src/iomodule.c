@@ -195,8 +195,8 @@ void show_topology(netnode *host){
 }
 
 void proc_extern(netnode *host){
-	char *buffer=(char*)malloc(128*sizeof(char)), *message=(char*)malloc(128*sizeof(char));
-	char *token[4];
+	char *buffer=(char*)calloc(1,128*sizeof(char)), *message=(char*)calloc(1,128*sizeof(char));
+	char *token[4]={NULL};
 	routing_entry *aux2=host->routing_list;
 	int i=0;
 	entry *aux=host->interns;
@@ -222,6 +222,7 @@ void proc_extern(netnode *host){
 			aux=host->interns;
 			host->interns=host->interns->brother;
 			sprintf(message, "EXTERN %s %s %s\n", host->external.id, host->external.IP, host->external.TCPport);
+			add_neighbour(host, host->external.id,host->external.id,host->external.fd);
 			write(host->external.fd, message, strlen(message)); /*anchor is now its own backup*/
 
 			//free(aux); /*better free here*/ /*its no longer an intern*/
@@ -280,8 +281,8 @@ void proc_extern(netnode *host){
 }
 
 void proc_intern(netnode *host, entry *intern, entry *prev){
-	char *buffer=(char*)malloc(128*sizeof(char));
-	char *message=(char*)malloc(128*sizeof(char));
+	char *buffer=(char*)calloc(1,128*sizeof(char));
+	char *message=(char*)calloc(1,128*sizeof(char));
 	entry *aux=NULL;
 	routing_entry *aux2=host->routing_list;
 	int n=read(intern->fd,buffer,128);
@@ -303,7 +304,7 @@ void proc_intern(netnode *host, entry *intern, entry *prev){
 			return;
 
 		}
-		remove_routing(host, host->interns->id);
+		remove_routing(host, intern->id);
 		close(intern->fd);
 		aux=intern;
 		intern=NULL;
@@ -317,7 +318,7 @@ void proc_intern(netnode *host, entry *intern, entry *prev){
 
 void proc_contact(netnode *host, char *buffer, char *in_id, int in_fd){
 	entry *aux=host->interns;
-	char *message=(char*)malloc(128*sizeof(char));
+	char *message=(char*)calloc(1,128*sizeof(char));
 	int i=0;	
 	char *token[4];
 	buffer=strtok(buffer, "\n");
