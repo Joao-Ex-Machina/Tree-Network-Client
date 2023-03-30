@@ -148,10 +148,15 @@ void remove_routing(netnode *host, char *candidate){
 		if((strcmp(aux->dest, candidate)==0)||(strcmp(aux->neighbour, candidate)==0)){
 			if(aux2!=aux)
 				aux2->next=aux->next;
-			else
+			else{
+				if(host->routing_list!=NULL)
+					//free(host->routing_list);
 				host->routing_list=NULL;
+			}
+			if(aux!=NULL)
+				//free(aux);
 			aux=NULL;
-			//free(aux);
+
 		}
 
 		aux2=aux;
@@ -164,14 +169,15 @@ void remove_routing(netnode *host, char *candidate){
 void clear_routing(netnode *host){
 	entry *aux3=host->interns;
 	if(!host->is_connected){
-		printf("[INFO]: Must be connect to a network to show routing");
+		printf("[INFO]: Must be connect to a network to clear routing");
 		return;
 	}
 	struct routing_entry *aux=host->routing_list, *aux2=host->routing_list;
 	while(aux!=NULL){
 		aux2=aux->next;
+		if(aux!=NULL)
+			//free(aux);
 		aux=NULL;
-		//free(aux);
 		aux=aux2;
 	}
 	printf("[INFO]: Routing cleared! Reloading external and internal routes\n");
@@ -186,6 +192,10 @@ void clear_routing(netnode *host){
 
 void show_routing(netnode *host){
 	struct routing_entry *aux=host->routing_list;
+	if(!host->is_connected){
+		printf("[INFO]: Must be connect to a network to show routing");
+		return;
+	}
 	if(aux==NULL){
 		printf("[INFO]: No routing entries\n");
 		return;

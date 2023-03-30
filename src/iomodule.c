@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
+#include <time.h>
 
 void proc_stdin(char* buffer, netnode *host){
 	int n;
@@ -175,11 +175,13 @@ void show_topology(netnode *host){
 		printf("[INFO]: You need to be connected to a network to show topology\n");
 		return;
 	}
-	printf("EXTERNAL\n");
+	printf("--[HOST]--\n");
+	printf("%s %s %s\n", host->self.id, host->self.IP, host->self.TCPport);
+	printf("--[EXTERNAL]--\n");
 	printf("%s %s %s\n", host->external.id, host->external.IP, host->external.TCPport);
-	printf("BACKUP\n");
+	printf("--[BACKUP]--\n");
 	printf("%s %s %s\n", host->backup.id, host->backup.IP, host->backup.TCPport);
-	printf("INTERNALS\n");
+	printf("--[INTERNALS]--\n");
 	aux=host->interns;
 	if(aux==NULL){
 		printf("--empty--\n");
@@ -202,15 +204,17 @@ void proc_extern(netnode *host){
 	entry *aux=host->interns;
 	int n=read(host->external.fd,buffer,128);
 	char *buffer2=strdup(buffer);
-	if(n==0 || n==-1){
+	if(n==0 || n==-1||(strcmp(buffer,"\0")==0)){
 		/*extern disconected*/
 		remove_routing(host, host->external.id);
 		while(aux2!=NULL){
 			sprintf(message, "WITHDRAW %s\n", host->external.id);
 			write(aux2->fd, message, strlen(message));
 			aux2=aux2->next;
+			usleep(250);
 
 		}
+
 		close(host->external.fd);
 		if(strcmp(host->self.id, host->backup.id)!=0) /*im not an anchor*/
 			djoin(host->net, host->self.id, host->backup.id, host->backup.IP, host->backup.TCPport, host);
@@ -224,7 +228,7 @@ void proc_extern(netnode *host){
 			sprintf(message, "EXTERN %s %s %s\n", host->external.id, host->external.IP, host->external.TCPport);
 			add_neighbour(host, host->external.id,host->external.id,host->external.fd);
 			write(host->external.fd, message, strlen(message)); /*anchor is now its own backup*/
-
+			usleep(250);
 			//free(aux); /*better free here*/ /*its no longer an intern*/
 		}
 		else{
@@ -247,7 +251,7 @@ void proc_extern(netnode *host){
 		}	
 		free(buffer);
 		free(message);
-
+		usleep(250);
 		return;
 	}
 	else{
@@ -286,7 +290,7 @@ void proc_intern(netnode *host, entry *intern, entry *prev){
 	entry *aux=NULL;
 	routing_entry *aux2=host->routing_list;
 	int n=read(intern->fd,buffer,128);
-	if(n==0){ /*intern left*/
+	if(n==0||n==-1||(strcmp(buffer,"\0")==0)){ /*intern left*/
 		if(intern!=host->interns)
 			prev->brother=intern->brother;
 		else{
@@ -343,6 +347,10 @@ void proc_contact(netnode *host, char *buffer, char *in_id, int in_fd){
 	}
 
 	else if(strcmp(token[0], "WITHDRAW")==0){
+		if(token[1]==NULL){
+			printf("[FAULT]: WITHDRAW message with wrong format received\n");
+			return;
+		}
 		aux=host->interns;
 		remove_routing(host, token[1]);
 		sprintf(message, "WITHDRAW %s\n", token[1]);

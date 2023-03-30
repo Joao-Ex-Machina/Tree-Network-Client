@@ -130,6 +130,7 @@ int handshake(netnode *host,addrinfo hints, addrinfo *res, sockaddr_in addr,char
 	int newfd=0,i=0;
 	char* buffer2 = (char*)malloc(128*sizeof(char)); // dup buffer to avoid writing on top of other data. Will probably fix in another version
 	netnode* aux=host;
+	entry* aux2=host->interns, *aux3=NULL;
 			printf("ENTER HANDSHAKE\n");
 			for (i=0; i<4; i++)
 				token[i]=(char*)malloc(128*(sizeof(char)));
@@ -148,6 +149,11 @@ int handshake(netnode *host,addrinfo hints, addrinfo *res, sockaddr_in addr,char
 				token[i]=strtok(NULL, " ");
 			}
 
+			if(token[0]==NULL){
+				printf("WRONG FORMAT ON OUTSIDE CLIENT\n");
+				return -1;
+
+			}
 			if(strcmp(token[0], "NEW")!=0){
 				printf("WRONG FORMAT ON OUTSIDE CLIENT\n");
 				for (int i=0; i<3; i++){
@@ -167,24 +173,26 @@ int handshake(netnode *host,addrinfo hints, addrinfo *res, sockaddr_in addr,char
 
 			}
 			else{
-				if(aux->interns==NULL){
-					aux->interns=(entry*)malloc(sizeof(entry));
+				if(aux2==NULL){
+					aux2=(entry*)malloc(sizeof(entry));
+					host->interns=aux2;
 				}
 				else{
-					while(aux->interns->brother!=NULL){
-						aux->interns=aux->interns->brother;
+					while(aux2!=NULL){
+						aux3=aux2;
+						aux2=aux2->brother;
 
 					}
 
-					aux->interns->brother=(entry*)malloc(sizeof(entry));
-					aux->interns=aux->interns->brother;
+					aux2=(entry*)malloc(sizeof(entry));
+					aux3->brother=aux2;
 				}
 			
-				aux->interns->IP=token[2];
-				aux->interns->id=token[1];
-				aux->interns->TCPport=token[3];
-				aux->interns->fd=newfd; /*Passar por referência*/
-				aux=host;
+				aux2->IP=token[2];
+				aux2->id=token[1];
+				aux2->TCPport=token[3];
+				aux2->fd=newfd; /*Passar por referência*/
+				aux2->brother=NULL;
 			}
 
 			add_neighbour(host, token[1], token[1],newfd);
@@ -202,7 +210,7 @@ bool join (netnode *host, char *net, char *id){
 		return 1;
 	}
 	data=UDPquery(host, net, host->serverIP, host->serverUDP);
-	if(data==NULL) /*It works but its a bad practice, will remove in  later version*/
+	if(data==NULL)
 		return 1;
 	else
 		djoin(net, id, data->id, data->IP, data->TCPport, host);
@@ -237,9 +245,10 @@ bool leave(netnode *host){
 		return 1;
 	}
 	/*WILL UDP DISCONNECT HERE*/
-	
+		
 	entry *aux=host->interns;
 	entry *next=NULL;
+	clear_routing(host);	
 	while(aux!=NULL){ /*close sockets and free memory*/
 		next=aux->brother;
 		close(aux->fd);
