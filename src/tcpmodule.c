@@ -203,7 +203,7 @@ bool join (netnode *host, char *net, char *id){
 	}
 	data=UDPquery(host, net, host->serverIP, host->serverUDP);
 	if(data==NULL) /*It works but its a bad practice, will remove in  later version*/
-		djoin(net, id, id, NULL, NULL, host);
+		return 1;
 	else
 		djoin(net, id, data->id, data->IP, data->TCPport, host);
 	

@@ -24,6 +24,7 @@ void create_content(netnode *host, char* message){
 		}
 	}
 	aux->content=message;
+	aux->next=NULL;
 	return;
 }
 
@@ -136,6 +137,7 @@ void add_neighbour(netnode *host, char *dest, char *neighbour, int fd){
 	aux->neighbour=neighbour;
 	aux->fd=fd;
 	aux2->next=aux;
+	aux->next=NULL;
 	return;
 
 }
@@ -144,7 +146,10 @@ void remove_routing(netnode *host, char *candidate){
 	struct routing_entry *aux=host->routing_list, *aux2=host->routing_list;
 	while(aux!=NULL){
 		if((strcmp(aux->dest, candidate)==0)||(strcmp(aux->neighbour, candidate)==0)){
-			aux2->next=aux->next;
+			if(aux2!=aux)
+				aux2->next=aux->next;
+			else
+				host->routing_list=NULL;
 			aux=NULL;
 			//free(aux);
 		}
