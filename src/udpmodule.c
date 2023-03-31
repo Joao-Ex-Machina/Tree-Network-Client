@@ -72,7 +72,7 @@ entry* UDPquery (netnode *host, char *net,char* regIP, char* regUDP){
     	}
 	err=recvfrom(fd, buffer, 128,0,(struct sockaddr*)&addr, &addrlen);
 	if (err==-1){
-		printf("[ERROR]: Connection to server timedout\n");
+		printf("[ERROR]: Connection to server timedout. Try again later.\n");
         	return NULL;
 
 	}
@@ -140,8 +140,8 @@ bool UDPreg(netnode *host, char *net, char *id,char* regIP, char* regUDP){
  	struct sockaddr_in addr;
 	int id_int=0;
 	struct timeval timeout;
-	timeout.tv_sec = 5;
-	timeout.tv_usec = 0;
+	timeout.tv_sec = 1;
+	timeout.tv_usec = 500;
 	int errcode=getaddrinfo(regIP,regUDP,&hints,&res);
 	if(errcode!=0) /*error*/ exit(1);
 	int id_first=0;
@@ -180,12 +180,15 @@ bool UDPreg(netnode *host, char *net, char *id,char* regIP, char* regUDP){
 		}
 		else if(n==-1){
 			if(tries >=5){
-				printf("[ERROR]: Connection to server timedout\n");
+				printf("[ERROR]: Connection to server timedout. Maximum Tries achieved.\n Check internet connection and try again later.\n");
  		       		regflag=1;
 				return 1;
 
 
 			}
+			printf("[ERROR]:Connection to server timedout. Try:%d/5\n",tries);
+			timeout.tv_sec=timeout.tv_sec*2;
+			timeout.tv_usec=timeout.tv_usec*2;
 			tries++;
 		}
 

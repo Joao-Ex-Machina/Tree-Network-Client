@@ -83,7 +83,7 @@ int main (int argc, char *argv[]){
 				maxfd=host->external.fd;
 		}
 		aux=host->interns;
-		printf("%p",(void*)host->interns);
+	//	printf("%p",(void*)host->interns);
 		
 		while(aux!=NULL){
 			//printf("Tenho internos não nulos");
@@ -96,9 +96,9 @@ int main (int argc, char *argv[]){
 		}
 		
 		/*tenho que dar fix disto*/
-		printf("maxfd: %d\n", maxfd);
+	//	printf("maxfd: %d\n", maxfd);
 		counter =select (maxfd + 1, &(host->rfds), (fd_set *) NULL, (fd_set *) NULL,(struct timeval *) NULL);
-		printf("counter: %d\n", counter);
+	//	printf("counter: %d\n", counter);
 		if (counter <= 0){
 			leave(host);
 		/*error */ exit (1);
