@@ -76,7 +76,7 @@ entry* UDPquery (netnode *host, char *net,char* regIP, char* regUDP){
         	return NULL;
 
 	}
-	printf("SERVER: %s\n", buffer);
+//	printf("SERVER: %s\n", buffer);
 	buffercontrol=strtok(buffer, "\n"); /*IT WAS BUFFERCONTROL BEFORE HAVE TO CHECK IF ITS WORKING*/
 	connections[0]=buffer;
 		while(connections[n]!=NULL){
@@ -88,7 +88,7 @@ entry* UDPquery (netnode *host, char *net,char* regIP, char* regUDP){
 				//free(aux);
 		}
 
-	printf("SERVER:%s\n",buffer);
+//	printf("SERVER:%s\n",buffer);
 	printf("CONTROL:%s\n",buffercontrol);
 	printf("diff: %d\n", strcmp(buffer, buffercontrol));
 	if(strcmp(buffer, buffercontrol)!=0){

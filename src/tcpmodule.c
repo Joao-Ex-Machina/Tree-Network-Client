@@ -41,10 +41,6 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 	char* token[4];
 	//printf("%s %s\n",id,bootid);
 	//printf("ENTREI NO DJOIN\n");
-	if(node->is_connected){
-		printf("[FAULT]: You have already joined a network.\n Please use leave before joining a new net\n");
-		return;
-	}
 	node->self.id=id;	
 	node->net=net;
 	for (i=0; i<4; i++)
