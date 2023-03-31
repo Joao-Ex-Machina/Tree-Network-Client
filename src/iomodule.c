@@ -180,11 +180,11 @@ void show_topology(netnode *host){
 		return;
 	}
 	printf("--[HOST]--\n");
-	printf("%s %s %s\n", host->self.id, host->self.IP, host->self.TCPport);
+	printf("[%s %s %s]\n", host->self.id, host->self.IP, host->self.TCPport);
 	printf("--[EXTERNAL]--\n");
-	printf("%s %s %s\n", host->external.id, host->external.IP, host->external.TCPport);
+	printf("[%s %s %s]\n", host->external.id, host->external.IP, host->external.TCPport);
 	printf("--[BACKUP]--\n");
-	printf("%s %s %s\n", host->backup.id, host->backup.IP, host->backup.TCPport);
+	printf("[%s %s %s]\n", host->backup.id, host->backup.IP, host->backup.TCPport);
 	printf("--[INTERNALS]--\n");
 	aux=host->interns;
 	if(aux==NULL){
@@ -193,7 +193,7 @@ void show_topology(netnode *host){
 
 	}
 	while(aux != NULL){
-		printf("%s %s %s\n", aux->id, aux->IP, aux->TCPport);
+		printf("[%s %s %s]\n", aux->id, aux->IP, aux->TCPport);
 		aux=aux->brother;
 	}
 	return;
@@ -368,7 +368,7 @@ void proc_contact(netnode *host, char *buffer, char *in_id, int in_fd){
 	int i=0;	
 	char *token[4];
 	buffer=strtok(buffer, "\n");
-	printf("%s",buffer);
+	// printf("%s",buffer);
 	token[i]=strtok(buffer, " ");
 	
 	while(token[i]!=NULL){

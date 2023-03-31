@@ -6,7 +6,7 @@
 
 void create_content(netnode *host, char* message){
 	struct container *aux=host->content_list, *aux2=host->content_list;
-	printf("Vou criar um conteúdo chamado %s", message);
+//	printf("Vou criar um conteúdo chamado %s", message);
 	if(aux==NULL){
 		host->content_list=malloc(sizeof(container));
 		aux=host->content_list;
@@ -29,6 +29,7 @@ void create_content(netnode *host, char* message){
 	}
 	aux->content=message;
 	aux->next=NULL;
+	printf("[INFO]:Content created sucessfully");
 	return;
 }
 
@@ -47,7 +48,7 @@ void remove_content(netnode *host, char* candidate){
 		aux2=aux;
 		aux=aux->next;
 	}
-	printf("[INFO]: No content named %s cached\n", candidate);
+	printf("[INFO]: No content named %s stored\n", candidate);
 	return;
 }
 

@@ -39,14 +39,18 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 	char *buffer=(char*)malloc(128*sizeof(char));
 	memset(buffer, '\0', 128*sizeof(char));
 	char* token[4];
-	printf("%s %s\n",id,bootid);
-	printf("ENTREI NO DJOIN\n");
+	//printf("%s %s\n",id,bootid);
+	//printf("ENTREI NO DJOIN\n");
+	if(node->is_connected){
+		printf("[FAULT]: You have already joined a network.\n Please use leave before joining a new net\n");
+		return;
+	}
 	node->self.id=id;	
 	node->net=net;
 	for (i=0; i<4; i++)
 		token[i]=(char*)malloc(128*(sizeof(char)));
-	printf("acabei setup\n");
-	printf("comparei os dois : %d \n", strcmp(id, bootid));
+	//printf("acabei setup\n");
+	//printf("comparei os dois : %d \n", strcmp(id, bootid));
 	if(strcmp(id, bootid)==0){
 		printf("INFO[000]: SELF CONNECTION\n");
 		bootIP=node->self.IP;
@@ -60,7 +64,7 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 		node->external.id=bootid;
 		node->is_connected=true;
 		node->TCPsocket=setTCP_server(node->self.TCPport);
-		printf("A sair do djoin\n");
+		//printf("A sair do djoin\n");
 		return;
 	}
 
@@ -72,10 +76,10 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 	hints.ai_family=AF_INET; //IPv4
 	hints.ai_socktype=SOCK_STREAM; //TCP socket
 	errcode=getaddrinfo(bootIP,bootTCP,&hints,&res);
-	printf("Vou ligar-me ao %s %s\n", bootIP, bootTCP);
+	//printf("Vou ligar-me ao %s %s\n", bootIP, bootTCP);
 
 	if(errcode!=0){
-		printf("ERROR: Something went wrong :/ ABORTING!");
+		printf("[ERROR]: Something went wrong :/ ABORTING!");
 		/*error*/exit(1);
 	}
 	if (strcmp(id, bootid)!=0){
@@ -91,7 +95,7 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 		memset(buffer, '\0', 128*sizeof(char));
 		sprintf(buffer,"NEW %s %s %s\n",node->self.id, node->self.IP ,node->self.TCPport);
 		n=write(fd, buffer, strlen(buffer));
-		printf("Mandei isto: %s\n", buffer);
+		//printf("Mandei isto: %s\n", buffer);
 		if(n==-1)
 			/*error*/exit(1);
 		memset(buffer, '\0', 128*sizeof(char));
@@ -132,7 +136,7 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 			return;
 
 		}
-	printf("I got this: %s %s %s\n", token[1], token[2], token[3]);	
+	//printf("I got this: %s %s %s\n", token[1], token[2], token[3]);	
 	node->backup.id=token[1];
 	node->backup.IP=token[2];
 	node->backup.TCPport=token[3];
@@ -146,7 +150,7 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 	node->external.id=bootid;
 	add_neighbour(node, bootid, bootid,fd);
 	node->is_connected=true;
-	printf("A sair do djoin\n");
+	// printf("A sair do djoin\n");
 
 	return;
 
@@ -159,7 +163,7 @@ int handshake(netnode *host,addrinfo hints, addrinfo *res, sockaddr_in addr,char
 	char* buffer2 = (char*)malloc(128*sizeof(char)); // dup buffer to avoid writing on top of other data. Will probably fix in another version
 	netnode* aux=host;
 	entry* aux2=host->interns, *aux3=NULL;
-			printf("ENTER HANDSHAKE\n");
+			//printf("ENTER HANDSHAKE\n");
 			for (i=0; i<4; i++)
 				token[i]=(char*)malloc(128*(sizeof(char)));
 			FD_CLR(host->TCPsocket, &rfds);
@@ -208,8 +212,8 @@ int handshake(netnode *host,addrinfo hints, addrinfo *res, sockaddr_in addr,char
 				}
 			}
 			
-						/* Caso host->external.id == host->self.id*/
-			/*Copiar estas todos para o external*/
+						/* IF host->external.id == host->self.id => I AM ALONE*/
+			/*THIS CONNECTIONS WILL BECOME MY EXTERNAL. A NEW ANCHOR!*/
 			if(strcmp(host->external.id, host->self.id)==0){
 				host->external.IP=token[2];
 				aux->external.id=token[1];
@@ -233,27 +237,34 @@ int handshake(netnode *host,addrinfo hints, addrinfo *res, sockaddr_in addr,char
 					aux3->brother=aux2;
 				}
 			
-				aux2->IP=token[2];
+				aux2->IP=token[2]; /*FILL INFO*/
 				aux2->id=token[1];
 				aux2->TCPport=token[3];
-				aux2->fd=newfd; /*Passar por referência*/
+				aux2->fd=newfd; 
 				aux2->brother=NULL;
 			}
 
 			add_neighbour(host, token[1], token[1],newfd);
 			sprintf(message, "EXTERN %s %s %s\n", host->external.id, host->external.IP, host->external.TCPport);/*acaba aqui*/
 			write(newfd, message, strlen(message));
-			printf("Adeus!\n");
+			printf("[INFO]: New connection was added!\n");
 			return newfd;
 }
 
 bool join (netnode *host, char *net, char *id){
 	entry* data=NULL;
 	printf("Net: %s\n", net);
+	
+	if(host->is_connected){
+		printf("[FAULT]: You have already joined a network.\n Please use leave before joining a new net\n");
+		return 1;
+	}
+
 	if(UDPreg(host, net, id, host->serverIP, host->serverUDP)==1){
 		printf("[NET]: Cannot register to network");
 		return 1;
 	}
+
 	data=UDPquery(host, net, host->serverIP, host->serverUDP);
 	if(data==NULL)
 		return 1;
@@ -280,16 +291,15 @@ bool leave(netnode *host){
 	if(errcode!=0)
 		/*error*/ exit(1);
 	sprintf(message, "UNREG %s %s\n", host->net, host->self.id);
-	printf("host: %s\n", message);
+//	printf("host: %s\n", message);
 	sendto(host->UDPsocket, message, strlen(message),0,res->ai_addr,res->ai_addrlen);
 	recvfrom(host->UDPsocket, servermsg, 7,0,(struct sockaddr*)&addr, &addrlen);
-	printf("Server: %s\n", servermsg);
+//	printf("Server: %s\n", servermsg);
 	servermsg[7]='\0';
 	if(strcmp("OKUNREG\0", servermsg)!=0){
 		printf("[FAULT]: Disconnection query was not accepted\n");	
 		return 1;
 	}
-	/*WILL UDP DISCONNECT HERE*/
 		
 	entry *aux=host->interns;
 	entry *next=NULL;
