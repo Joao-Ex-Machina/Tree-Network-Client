@@ -114,7 +114,7 @@ void proc_stdin(char* buffer, netnode *host){
 	}
 	else if(strcmp(token[0], "leave")==0){
 		if(leave(host)){
-			printf("[FAULT]: Leave failed");
+			printf("[FAULT]: Leave failed\n");
 		}
 		free(buffer2);
 		return;
