@@ -174,8 +174,8 @@ int handshake(netnode *host,addrinfo hints, addrinfo *res, sockaddr_in addr,char
 				}
 			}
 			
-						/* Caso host->backup.id == host->self.id*/
-			/*Copiar estes aux->interns todos para o backup*/
+						/* Caso host->external.id == host->self.id*/
+			/*Copiar estas todos para o external*/
 			if(strcmp(host->external.id, host->self.id)==0){
 				host->external.IP=token[2];
 				aux->external.id=token[1];

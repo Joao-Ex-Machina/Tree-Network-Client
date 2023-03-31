@@ -169,6 +169,7 @@ void remove_routing(netnode *host, char *candidate){
 
 void clear_routing(netnode *host){
 	entry *aux3=host->interns;
+	bool first=true;
 	if(!host->is_connected){
 		printf("[INFO]: Must be connect to a network to clear routing");
 		return;
@@ -178,7 +179,13 @@ void clear_routing(netnode *host){
 
 	struct routing_entry *aux=host->routing_list, *aux2=host->routing_list;
 	while(aux!=NULL){
-		aux2=aux->next;
+		if(first==true){
+			aux2=host->routing_list->next;
+			host->routing_list=NULL;
+			first=false;
+		}
+		else
+			aux2=aux->next;
 		if(aux!=NULL)
 			//free(aux);
 			aux=NULL;

@@ -83,6 +83,8 @@ int main (int argc, char *argv[]){
 				maxfd=host->external.fd;
 		}
 		aux=host->interns;
+		printf("%p",(void*)host->interns);
+		
 		while(aux!=NULL){
 			printf("Tenho internos não nulos");
 			FD_SET(aux->fd, &(host->rfds));
@@ -97,9 +99,10 @@ int main (int argc, char *argv[]){
 		printf("maxfd: %d\n", maxfd);
 		counter =select (maxfd + 1, &(host->rfds), (fd_set *) NULL, (fd_set *) NULL,(struct timeval *) NULL);
 		printf("counter: %d\n", counter);
-		if (counter <= 0)
+		if (counter <= 0){
+			leave(host);
 		/*error */ exit (1);
-
+		}
 		while(counter>0){
 			if (FD_ISSET (host->TCPsocket, &(host->rfds))){
 				printf("alguém quer-se registar\n");
@@ -126,10 +129,14 @@ int main (int argc, char *argv[]){
 				if(FD_ISSET (aux->fd, &(host->rfds))){
 					FD_CLR(aux->fd, &(host->rfds));
 					printf("Um interno (%s) apitou", aux->id);
-					proc_intern(host, aux, aux2);
+					aux=proc_intern(host, aux, aux2);
 				}
-				aux2=aux;
-				aux=aux->brother;
+				if(aux!=NULL){
+					aux2=aux;
+					aux=aux->brother;
+
+				}
+							
 			}
 
 			if (FD_ISSET (0,&(host->rfds))){

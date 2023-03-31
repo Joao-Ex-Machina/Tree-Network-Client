@@ -2,6 +2,7 @@
 #include "netstruct.h"
 #include "tcp.h"
 #include "content.h"
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -283,39 +284,44 @@ void proc_extern(netnode *host){
 	return;
 }
 
-void proc_intern(netnode *host, entry *intern, entry *prev){
+entry* proc_intern(netnode *host, entry *intern, entry *prev){
 	char *buffer=(char*)calloc(1,128*sizeof(char));
 	char *message=(char*)calloc(1,128*sizeof(char));
-	entry *aux=NULL;
-	routing_entry *aux2=host->routing_list;
+	entry *aux=host->interns;
 	int n=read(intern->fd,buffer,128);
+	bool first=false;
 	if(n==0||n==-1||(strcmp(buffer,"\0")==0)){ /*intern left*/
+		printf("Vou remover o %s", intern->id);
 		if(intern!=host->interns)
 			prev->brother=intern->brother;
-		else{
-			remove_routing(host, host->interns->id);
-			close(intern->fd);
 			//free(intern);
-			host->interns=NULL;
-
-			while(aux2!=NULL){
-				sprintf(message, "WITHDRAW %s\n", intern->id);
-				write(aux2->fd, message, strlen(message));
-				aux2=aux2->next;
-
-			}
-			return;
+		else
+			first=true;
+		
+		while(aux!=NULL){
+			sprintf(message, "WITHDRAW %s\n", intern->id);
+			if((strcmp(aux->id, intern->id)!=0))
+				write(aux->fd, message, strlen(message));
+			aux=aux->brother;
 
 		}
+
+		write(host->external.fd,message,strlen(message));
+
 		remove_routing(host, intern->id);
 		close(intern->fd);
-		aux=intern;
-		intern=NULL;
+		if(first==true)
+			host->interns=NULL;
+		else
+			intern=NULL;
 		//free(aux); /*so many lost blocks*/
 	}
 	else
 		proc_contact(host, buffer, intern->id, intern->fd);
-	return;
+
+	free(buffer);
+	free(message);
+	return intern;
 }
 
 
