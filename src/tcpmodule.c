@@ -59,6 +59,7 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 		node->external.TCPport=bootTCP;
 		node->external.id=bootid;
 		node->is_connected=true;
+		node->TCPsocket=setTCP_server(node->self.TCPport);
 		printf("A sair do djoin\n");
 		return;
 	}
@@ -78,6 +79,7 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 		/*error*/exit(1);
 	}
 	if (strcmp(id, bootid)!=0){
+		node->TCPsocket=setTCP_server(node->self.TCPport);
 		n=connect(fd,res->ai_addr,res->ai_addrlen);
 		if(n==-1){
 			printf("ERROR: Cannot Connect to node or network. Please clear this network or choose a new one.");
@@ -131,7 +133,6 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 	node->external.id=bootid;
 	add_neighbour(node, bootid, bootid,fd);
 	node->is_connected=true;
-	node->TCPsocket=setTCP_server(node->self.TCPport);
 	printf("A sair do djoin\n");
 
 	return;
