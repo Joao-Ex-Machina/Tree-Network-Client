@@ -96,9 +96,20 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 			/*error*/exit(1);
 		memset(buffer, '\0', 128*sizeof(char));
 		n=read(fd,buffer,128);
+		
+		while(buffer[strlen(buffer)]!='\n'){
+			if(n==0||n==-1||(strcmp(buffer,"\0")==0))
+				break;
+			else
+				n=read(fd,buffer,128);
+			if(n>=128)
+				break;
+			sleep(1);	
+		}
+
 		if(n==-1)
 			/*error*/exit(1);
-		if(n==0){
+		if(n==0 || (strcmp(buffer,"\0")==0)){
 			printf("ERROR: Cannot Connect to node or network. Please clear this network or choose a new one.");
 			node->is_connected=true;
 			leave(node);
@@ -116,8 +127,10 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 			token[i]=strtok(NULL, " ");
 		}
 		if(strcmp(token[0], "EXTERN")!=0){
-			printf("ERROR\n");
-			exit(1);
+			node->is_connected=true;
+			leave(node);
+			return;
+
 		}
 	printf("I got this: %s %s %s\n", token[1], token[2], token[3]);	
 	node->backup.id=token[1];
@@ -153,7 +166,23 @@ int handshake(netnode *host,addrinfo hints, addrinfo *res, sockaddr_in addr,char
 			socklen_t addrlen = sizeof (addr);
 			if ((newfd = accept (host->TCPsocket, (struct sockaddr*)&addr, &addrlen)) == -1)
 			  return newfd;
-			read(newfd, buffer2, 128);
+			int n=read(newfd, buffer2, 128);
+			
+			while(buffer2[strlen(buffer2)]!='\n'){
+				if(n==0||n==-1||(strcmp(buffer2,"\0")==0))
+					break;
+				else
+					n=read(newfd,buffer2,128);
+				if(n>=128)
+					break;
+				sleep(1);	
+			}
+			if(n==0||n==-1||(strcmp(buffer2,"\0")==0)){
+				printf("OUTSIDE CLIENT FAILED TO CONNECT\n");
+				return -1;
+
+			}
+	
 			i=0;
 			buffer2=strtok(buffer2, "\n");
 			token[i]=strtok(buffer2, " ");
@@ -163,7 +192,7 @@ int handshake(netnode *host,addrinfo hints, addrinfo *res, sockaddr_in addr,char
 				i++;
 				token[i]=strtok(NULL, " ");
 			}
-
+			
 			if(token[0]==NULL){
 				printf("WRONG FORMAT ON OUTSIDE CLIENT\n");
 				return -1;

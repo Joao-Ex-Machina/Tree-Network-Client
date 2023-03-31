@@ -208,6 +208,17 @@ void proc_extern(netnode *host){
 	entry *aux=host->interns;
 	int n=read(host->external.fd,buffer,128);
 	char *buffer2=strdup(buffer);
+	
+	while(buffer[strlen(buffer)]!='\n'){
+		if(n==0||n==-1||(strcmp(buffer,"\0")==0))
+			break;
+		else
+			n=read(host->external.fd,buffer,128);
+		if(n>=128)
+			break;
+		sleep(1);	
+	}
+
 	if(n==0 || n==-1||(strcmp(buffer,"\0")==0)){
 		/*extern disconected*/
 		remove_routing(host, host->external.id);
@@ -293,7 +304,20 @@ entry* proc_intern(netnode *host, entry *intern, entry *prev){
 	char *message=(char*)calloc(1,128*sizeof(char));
 	entry *aux=host->interns;
 	int n=read(intern->fd,buffer,128);
+	
 	bool first=false;
+
+	while(buffer[strlen(buffer)]!='\n'){
+		if(n==0||n==-1||(strcmp(buffer,"\0")==0))
+			break;
+		else
+			n=read(intern->fd,buffer,128);
+		
+		if(n>=128)
+			break;
+		sleep(1);	
+	}
+
 	if(n==0||n==-1||(strcmp(buffer,"\0")==0)){ /*intern left*/
 	//	printf("Vou remover o %s", intern->id);
 		if(intern!=host->interns)
