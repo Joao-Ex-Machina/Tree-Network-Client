@@ -208,27 +208,30 @@ void proc_extern(netnode *host){
 	entry *aux=host->interns;
 	int n=read(host->external.fd,buffer,128);
 	char *buffer2=strdup(buffer);
-	
-	while(buffer[strlen(buffer)-1]!='\n'){
-		if(n==0||n==-1||(strcmp(buffer,"\0")==0))
-			break;
-		else
-			n=read(host->external.fd,buffer,128);
-		if(n>=128)
-			break;
-		sleep(1);	
+
+	if(!(n==0 || n==-1||(strcmp(buffer,"\0")==0))){
+
+		while(buffer[strlen(buffer)-1]!='\n'){
+			if(n==0||n==-1||(strcmp(buffer,"\0")==0))
+				break;
+			else
+				n=read(host->external.fd,buffer,128);
+			if(n>=128)
+				break;
+			sleep(1);	
+		}
 	}
 
 	if(n==0 || n==-1||(strcmp(buffer,"\0")==0)){
-		/*extern disconected*/
-		remove_routing(host, host->external.id);
-		while(aux2!=NULL){
-			sprintf(message, "WITHDRAW %s\n", host->external.id);
-			write(aux2->fd, message, strlen(message));
-			aux2=aux2->next;
-			usleep(250);
+	/*extern disconected*/
+	remove_routing(host, host->external.id);
+	while(aux2!=NULL){
+		sprintf(message, "WITHDRAW %s\n", host->external.id);
+		write(aux2->fd, message, strlen(message));
+		aux2=aux2->next;
+		usleep(250);
 
-		}
+	}
 
 		close(host->external.fd);
 		if(strcmp(host->self.id, host->backup.id)!=0) /*im not an anchor*/
@@ -311,16 +314,21 @@ entry* proc_intern(netnode *host, entry *intern, entry *prev){
 	int n=read(intern->fd,buffer,128);
 	
 	bool first=false;
+	
+	if(n==0||n==-1||(strcmp(buffer,"\0")==0)){ /*intern left*/
+			
+		while(buffer[strlen(buffer)-1]!='\n'){
+			if(n==0||n==-1||(strcmp(buffer,"\0")==0))
+				break;
+			else
+				n=read(intern->fd,buffer,128);
+			
+			if(n>=128)
+				break;
+			sleep(1);	
+		}
 
-	while(buffer[strlen(buffer)-1]!='\n'){
-		if(n==0||n==-1||(strcmp(buffer,"\0")==0))
-			break;
-		else
-			n=read(intern->fd,buffer,128);
-		
-		if(n>=128)
-			break;
-		sleep(1);	
+	
 	}
 
 	if(n==0||n==-1||(strcmp(buffer,"\0")==0)){ /*intern left*/
@@ -338,6 +346,7 @@ entry* proc_intern(netnode *host, entry *intern, entry *prev){
 			aux=aux->brother;
 
 		}
+	
 
 		write(host->external.fd,message,strlen(message));
 
