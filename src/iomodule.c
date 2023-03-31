@@ -338,8 +338,12 @@ entry* proc_intern(netnode *host, entry *intern, entry *prev){
 
 		remove_routing(host, intern->id);
 		close(intern->fd);
-		if(first==true)
-			host->interns=NULL;
+		if(first==true){
+			if(host->interns->brother!=NULL)
+				host->interns=host->interns->brother;
+			else
+				host->interns=NULL;
+		}
 		else
 			intern=NULL;
 		//free(aux); /*so many lost blocks*/
