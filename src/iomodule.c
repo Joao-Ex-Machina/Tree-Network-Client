@@ -315,7 +315,7 @@ entry* proc_intern(netnode *host, entry *intern, entry *prev){
 	
 	bool first=false;
 	
-	if(n==0||n==-1||(strcmp(buffer,"\0")==0)){ /*intern left*/
+	if(!(n==0||n==-1||(strcmp(buffer,"\0")==0))){ /*intern left*/
 			
 		while(buffer[strlen(buffer)-1]!='\n'){
 			if(n==0||n==-1||(strcmp(buffer,"\0")==0))
