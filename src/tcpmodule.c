@@ -97,7 +97,7 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 		memset(buffer, '\0', 128*sizeof(char));
 		n=read(fd,buffer,128);
 		
-		while(buffer[strlen(buffer)]!='\n'){
+		while(buffer[strlen(buffer)-1]!='\n'){
 			if(n==0||n==-1||(strcmp(buffer,"\0")==0))
 				break;
 			else
@@ -167,15 +167,16 @@ int handshake(netnode *host,addrinfo hints, addrinfo *res, sockaddr_in addr,char
 			if ((newfd = accept (host->TCPsocket, (struct sockaddr*)&addr, &addrlen)) == -1)
 			  return newfd;
 			int n=read(newfd, buffer2, 128);
-			
-			while(buffer2[strlen(buffer2)]!='\n'){
-				if(n==0||n==-1||(strcmp(buffer2,"\0")==0))
-					break;
-				else
-					n=read(newfd,buffer2,128);
-				if(n>=128)
-					break;
-				sleep(1);	
+			if(buffer2[strlen(buffer2)-1]!='\n'){	
+				while(buffer2[strlen(buffer2)-1]!='\n'){
+					if(n==0||n==-1||(strcmp(buffer2,"\0")==0))
+						break;
+					else
+						n=read(newfd,buffer2,128);
+					if(n>=128)
+						break;
+					sleep(1);	
+				}
 			}
 			if(n==0||n==-1||(strcmp(buffer2,"\0")==0)){
 				printf("OUTSIDE CLIENT FAILED TO CONNECT\n");

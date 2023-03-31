@@ -209,7 +209,7 @@ void proc_extern(netnode *host){
 	int n=read(host->external.fd,buffer,128);
 	char *buffer2=strdup(buffer);
 	
-	while(buffer[strlen(buffer)]!='\n'){
+	while(buffer[strlen(buffer)-1]!='\n'){
 		if(n==0||n==-1||(strcmp(buffer,"\0")==0))
 			break;
 		else
@@ -307,7 +307,7 @@ entry* proc_intern(netnode *host, entry *intern, entry *prev){
 	
 	bool first=false;
 
-	while(buffer[strlen(buffer)]!='\n'){
+	while(buffer[strlen(buffer)-1]!='\n'){
 		if(n==0||n==-1||(strcmp(buffer,"\0")==0))
 			break;
 		else
