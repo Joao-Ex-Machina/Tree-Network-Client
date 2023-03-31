@@ -14,7 +14,7 @@ void create_content(netnode *host, char* message){
 	else{
 		while(aux != NULL){
 			if(strcmp(aux->content, message)==0){
-				printf("[INFO]:Content already created");
+				printf("[INFO]:Content already created\n");
 				return;
 			}
 			aux2=aux;
@@ -29,7 +29,7 @@ void create_content(netnode *host, char* message){
 	}
 	aux->content=message;
 	aux->next=NULL;
-	printf("[INFO]:Content created sucessfully");
+	printf("[INFO]:Content created sucessfully\n");
 	return;
 }
 

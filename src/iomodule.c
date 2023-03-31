@@ -378,8 +378,8 @@ void proc_contact(netnode *host, char *buffer, char *in_id, int in_fd){
 	int i=0;	
 	char *token[4];
 	// printf("%s",buffer);
-	token[i]=strtok(buffer, " ");
-	
+	buffer=strtok(buffer,"\n");
+	token[i]=strtok(buffer, " ");	
 	while(token[i]!=NULL){
 		if (i > 3)
 			break;
@@ -408,6 +408,7 @@ void proc_contact(netnode *host, char *buffer, char *in_id, int in_fd){
 		while(aux!=NULL){
 			if((aux->fd)!=in_fd)
 				write(aux->fd,message,sizeof(message));
+			aux=aux->brother;
 		}
 		if((host->external.fd)!=in_fd)
 			write(aux->fd,message,sizeof(message));
