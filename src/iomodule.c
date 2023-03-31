@@ -335,7 +335,7 @@ void proc_contact(netnode *host, char *buffer, char *in_id, int in_fd){
 	int i=0;	
 	char *token[4];
 	buffer=strtok(buffer, "\n");
-	//printf("%s",buffer);
+	printf("%s",buffer);
 	token[i]=strtok(buffer, " ");
 	
 	while(token[i]!=NULL){
@@ -377,7 +377,7 @@ void proc_contact(netnode *host, char *buffer, char *in_id, int in_fd){
 		sprintf(message, "%s %s %s %s\n", token[0], token[1], token[2], token[3]);
 		add_neighbour(host, token[2], in_id, in_fd);
 		if(strcmp(host->self.id, token[1])==0)
-			printf("%s",message);
+			printf("%s\n",message);
 		else{
 			int fd=search_neighbour(host,token[1]);
 			if(fd!=-1)
@@ -386,7 +386,7 @@ void proc_contact(netnode *host, char *buffer, char *in_id, int in_fd){
 		
 	}
 	else {
-		printf("[INFO]: Unknown Contact");
+		printf("[INFO]: Unknown Contact\n");
 		return;
 	}
 }

@@ -41,7 +41,8 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 	char* token[4];
 	printf("%s %s\n",id,bootid);
 	printf("ENTREI NO DJOIN\n");
-	
+	node->self.id=id;	
+	node->net=net;
 	for (i=0; i<4; i++)
 		token[i]=(char*)malloc(128*(sizeof(char)));
 	printf("acabei setup\n");
@@ -81,6 +82,7 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 		if(n==-1){
 			printf("ERROR: Cannot Connect to node or network. Please clear this network or choose a new one.");
 			node->is_connected=true;
+			close(fd);
 			leave(node);
 			return;
 		}
@@ -129,6 +131,7 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 	node->external.id=bootid;
 	add_neighbour(node, bootid, bootid,fd);
 	node->is_connected=true;
+	node->TCPsocket=setTCP_server(node->self.TCPport);
 	printf("A sair do djoin\n");
 
 	return;
@@ -226,7 +229,6 @@ bool join (netnode *host, char *net, char *id){
 	else
 		djoin(net, id, data->id, data->IP, data->TCPport, host);
 	
-	host->TCPsocket=setTCP_server(host->self.TCPport);
 	return 0;
 }
 
