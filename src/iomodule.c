@@ -58,7 +58,7 @@ void proc_stdin(char* buffer, netnode *host){
 		
 	}	
 	else if (strcmp(token[0], "djoin") == 0){
-		printf("okay\n");
+	//	printf("okay\n");
 
 		if(host->is_connected){
 			printf("FAULT: You are already connected to a network. Please leave your network before re-connecting\n");
@@ -156,19 +156,23 @@ bool Is_ValidPort(const char *candidate){
 
 
 void host_exit(netnode *host){
+	container *aux=host->content_list, *aux2=NULL;
 	if(host->is_connected){
 		printf("[INFO]: Host is still connected to a network\n");
 		printf("[INFO]: Will force exit. This will leave the network first.");
-		leave(host);	
-		free(host);
-		exit(0);
+		leave(host);
 
 	}
-	else{
-		free(host);
-		exit(0);
+	while(aux!=NULL){
+		aux2=aux->next;
+		//free(aux->content);
+		free(aux);
+		aux=aux2;
 	}
+	free(host);
+	exit(0);
 }
+
 void show_topology(netnode *host){
 	entry *aux=NULL;
 	if(!host->is_connected){
@@ -270,7 +274,7 @@ void proc_extern(netnode *host){
 			return;		
 		}
 		else if ((strcmp(token[0], "QUERY")==0)|| (strcmp(token[0], "WITHDRAW")==0)|| (strcmp(token[0], "CONTENT")==0) || (strcmp(token[0], "NOCONTENT")==0)){
-			printf("%s\n",buffer2);
+			//printf("%s\n",buffer2);
 			proc_contact(host, buffer2, host->external.id, host->external.fd);
 
 		}
@@ -291,7 +295,7 @@ entry* proc_intern(netnode *host, entry *intern, entry *prev){
 	int n=read(intern->fd,buffer,128);
 	bool first=false;
 	if(n==0||n==-1||(strcmp(buffer,"\0")==0)){ /*intern left*/
-		printf("Vou remover o %s", intern->id);
+	//	printf("Vou remover o %s", intern->id);
 		if(intern!=host->interns)
 			prev->brother=intern->brother;
 			//free(intern);
@@ -331,7 +335,7 @@ void proc_contact(netnode *host, char *buffer, char *in_id, int in_fd){
 	int i=0;	
 	char *token[4];
 	buffer=strtok(buffer, "\n");
-	printf("%s",buffer);
+	//printf("%s",buffer);
 	token[i]=strtok(buffer, " ");
 	
 	while(token[i]!=NULL){
@@ -342,7 +346,7 @@ void proc_contact(netnode *host, char *buffer, char *in_id, int in_fd){
 	}
 
 	if(strcmp(token[0], "QUERY")==0){
-		printf("Eu sou o %s e tenho que contactar o %s \n", host->self.id, token[1]);
+	//	printf("Eu sou o %s e tenho que contactar o %s \n", host->self.id, token[1]);
 		add_neighbour(host, token[2], in_id, in_fd);
 		if(strcmp(host->self.id, token[1])==0)
 			search_content(host, token[1], token[2], token[3]);

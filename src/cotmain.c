@@ -30,7 +30,7 @@ int main (int argc, char *argv[]){
 
 	IP=argv[1];
 	tcp_port=argv[2];
-	printf("Eu sou o %s na porta %s\n ",IP, tcp_port);
+	//printf("Eu sou o %s na porta %s\n ",IP, tcp_port);
 
 	if (argc >= 4)
 		regIP=argv[3];
@@ -49,7 +49,7 @@ int main (int argc, char *argv[]){
 		printf("ERROR[000]: Incorrect Regitrar Server data. Check Server IPv4 and UDP port.");
 		exit(1);
 	}
-	printf("O meu servidor é %s na porta %s \n", regIP, regUDP);
+	//printf("O meu servidor é %s na porta %s \n", regIP, regUDP);
 	/*QUICK HOST INITIALIZATION*/
 	host=(netnode*)malloc(sizeof(netnode));
 	host->TCPsocket=-1;
@@ -64,12 +64,12 @@ int main (int argc, char *argv[]){
 	host->interns=NULL;
 	
 	/*SOCKET INIT*/
-	printf("Socket TCP: %d\n", host->TCPsocket);
+	//printf("Socket TCP: %d\n", host->TCPsocket);
 	host->UDPsocket=UDPconnect(regIP, regUDP);
-	printf("Socket UDP: %d\n", host->UDPsocket);
+	//printf("Socket UDP: %d\n", host->UDPsocket);
 	while (1){
 		FD_ZERO (&(host->rfds));
-		printf("entrei no while\n");
+		//printf("entrei no while\n");
 		FD_SET(0,&(host->rfds));
 		maxfd=2;
 		if(host->TCPsocket!=-1){
@@ -86,7 +86,7 @@ int main (int argc, char *argv[]){
 		printf("%p",(void*)host->interns);
 		
 		while(aux!=NULL){
-			printf("Tenho internos não nulos");
+			//printf("Tenho internos não nulos");
 			FD_SET(aux->fd, &(host->rfds));
 			if(aux->fd>maxfd)
 				maxfd=aux->fd;
@@ -105,21 +105,23 @@ int main (int argc, char *argv[]){
 		}
 		while(counter>0){
 			if (FD_ISSET (host->TCPsocket, &(host->rfds))){
-				printf("alguém quer-se registar\n");
+				//printf("alguém quer-se registar\n");
 				newfd=handshake(host, hints, res, addr,buffer,host->rfds);
+				newfd ++;
+				newfd --;
 				FD_CLR(host->TCPsocket, &(host->rfds));
 			}
 
 			if (FD_ISSET (host->external.fd, &(host->rfds))){
 				if(strcmp(host->external.id, host->self.id)!=0){
 					FD_CLR(host->external.fd, &(host->rfds));
-					printf("O externo apitou");
+					//printf("O externo apitou");
 					proc_extern(host);
 					
 				}
 
-				else
-					printf("Estou sozinho na rede");	
+				//else
+					//printf("Estou sozinho na rede");	
 					
 			}
 
@@ -128,7 +130,7 @@ int main (int argc, char *argv[]){
 			while(aux!=NULL){
 				if(FD_ISSET (aux->fd, &(host->rfds))){
 					FD_CLR(aux->fd, &(host->rfds));
-					printf("Um interno (%s) apitou", aux->id);
+				//	printf("Um interno (%s) apitou", aux->id);
 					aux=proc_intern(host, aux, aux2);
 				}
 				if(aux!=NULL){
