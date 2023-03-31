@@ -64,7 +64,7 @@ entry* UDPquery (netnode *host, char *net,char* regIP, char* regUDP){
 	srand(time(NULL)); // seed the random number generator
 	sprintf(buffer, "NODES %s\n", net);
 	sprintf(buffercontrol, "NODESLIST %s\n", net);
-	printf("HOST:%s\n", buffer);
+//	printf("HOST:%s\n", buffer);
 	sendto(host->UDPsocket, buffer, strlen(buffer),0,res->ai_addr,res->ai_addrlen);	
 	if (setsockopt(host->UDPsocket, SOL_SOCKET, SO_RCVTIMEO,&timeout,sizeof(timeout)) < 0) {
         	printf("[ERROR]: Connection to server timedout\n");
@@ -89,13 +89,13 @@ entry* UDPquery (netnode *host, char *net,char* regIP, char* regUDP){
 		}
 
 //	printf("SERVER:%s\n",buffer);
-	printf("CONTROL:%s\n",buffercontrol);
-	printf("diff: %d\n", strcmp(buffer, buffercontrol));
+//	printf("CONTROL:%s\n",buffercontrol);
+//	printf("diff: %d\n", strcmp(buffer, buffercontrol));
 	if(strcmp(buffer, buffercontrol)!=0){
 		printf("[ERROR]: WRONG FORMAT ON REGISTRAR SERVER, EXITING...");
 		exit(1);
 	}
-	printf("n is: %d\n", n);
+	// printf("n is: %d\n", n);
 	if(n>1)
 		n=n-2;/*Network is not empty and should not connect to the same node*/
 	else
@@ -117,9 +117,9 @@ entry* UDPquery (netnode *host, char *net,char* regIP, char* regUDP){
 	}
 	chosen_line=(rand()%n)+1;
 	chosen_buffer=connections[chosen_line];
-	printf("HOST: Chose data:[%s]\n",chosen_buffer);
-	printf("banan: %d\n",sscanf(connections[chosen_line], "%s %s %s", data->id, data->IP, data->TCPport));
-	printf("saved: %s %s %s\n", data->id, data->IP, data->TCPport);
+//	printf("HOST: Chose data:[%s]\n",chosen_buffer);
+//	printf("banan: %d\n",sscanf(connections[chosen_line], "%s %s %s", data->id, data->IP, data->TCPport));
+//	printf("saved: %s %s %s\n", data->id, data->IP, data->TCPport);
 	if(sscanf(chosen_buffer, "%s %s %s", data->id, data->IP, data->TCPport) != 3){
 		printf("[ERROR]: WRONG FORMAT ON REGISTRAR SERVER, EXITING...");
 		free(buffer);
@@ -149,16 +149,16 @@ bool UDPreg(netnode *host, char *net, char *id,char* regIP, char* regUDP){
 	socklen_t addrlen=sizeof(addr);
 	id_int=atoi(id);
 	id_first=id_int;
-	printf("entrei no registo\n");
+//	printf("entrei no registo\n");
 	while (regflag==0){
-		printf("UDP socket:%d\n",host->UDPsocket);
+//		printf("UDP socket:%d\n",host->UDPsocket);
 		sprintf(message,"REG %s %02d %s %s\n", net, id_int, host->self.IP, host->self.TCPport);
 		
 		//printf("%s %d\n", buffer, strlen(buffer));
-		printf("%s",id);
-		printf("%s",id);
+//		printf("%s",id);
+//		printf("%s",id);
 		sendto(host->UDPsocket, message,strlen(message),0, res->ai_addr,res->ai_addrlen);
-		printf("registei\n");
+	//	printf("registei\n");
 		
 		if (setsockopt(host->UDPsocket, SOL_SOCKET, SO_RCVTIMEO,&timeout,sizeof(timeout)) < 0) {
         		printf("[ERROR]: Connection to server timedout\n");
@@ -167,15 +167,16 @@ bool UDPreg(netnode *host, char *net, char *id,char* regIP, char* regUDP){
 
     		}
 		n=recvfrom(host->UDPsocket, buffer, 128,0,(struct sockaddr*)&addr, &addrlen);
-		printf("%d",n);
-		printf("servidor: %s\n",buffer);
+		//printf("%d",n);
+//		printf("servidor: %s\n",buffer);
 		if((strcmp(buffer, "OKREG")==0)||((buffer[0]=='O')&&(buffer[1]=='K')&&(buffer[2]=='R')&&(buffer[3]=='E')&&(buffer[4]=='G'))){
 			
-			printf("O Server aceitou\n");
+//			printf("O Server aceitou\n");
 			regflag=1;
 			host->net=net;
 			host->self.id=id;
 			free(buffer);
+			printf("[INFO]: Registration sucessful with id %s\n",host->self.id);
 			return 0;
 		}
 		else if(n==-1){
@@ -202,7 +203,7 @@ bool UDPreg(netnode *host, char *net, char *id,char* regIP, char* regUDP){
 				free(buffer);
 				return 1;
 			}
-			sprintf(id, "%2d",id_int);
+			sprintf(id, "%02d",id_int);
 		}
 	
 	

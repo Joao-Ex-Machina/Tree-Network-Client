@@ -46,7 +46,7 @@ void proc_stdin(char* buffer, netnode *host){
 			printf("FAULT: You are already connected to a network. Please leave your network before re-connecting\n");
 			return;
 		}
-		printf("okay!\n");
+//		printf("okay!\n");
 		for(n=1; n<3;n++){
 			if(token[n]==NULL || (token[n]!=NULL && strcmp(token[n],"\0"))==0){
 				printf("FAULT[001]: MISSING ARGUMENTS FOR COMMAND\n");
@@ -250,7 +250,7 @@ void proc_extern(netnode *host){
 				add_neighbour(host, aux->id, aux->id, aux->fd);
 				aux=aux->brother;
 			}
-		//	write(host->external.fd, message, strlen(message)); /*anchor is now its own backup*/
+			write(host->external.fd, message, strlen(message)); /*anchor is now its own backup*/		 /*Fail-safe*/
 			usleep(250);
 			//free(aux); /*better free here*/ /*its no longer an intern*/
 		}
@@ -278,6 +278,7 @@ void proc_extern(netnode *host){
 		return;
 	}
 	else{
+		buffer=strtok(buffer,"\n");
 		token[i]=strtok(buffer, " ");
 		while(token[i]!=NULL){
 			if (i > 3)
@@ -376,7 +377,6 @@ void proc_contact(netnode *host, char *buffer, char *in_id, int in_fd){
 	char *message=(char*)calloc(1,128*sizeof(char));
 	int i=0;	
 	char *token[4];
-	buffer=strtok(buffer, "\n");
 	// printf("%s",buffer);
 	token[i]=strtok(buffer, " ");
 	
@@ -419,7 +419,7 @@ void proc_contact(netnode *host, char *buffer, char *in_id, int in_fd){
 		sprintf(message, "%s %s %s %s\n", token[0], token[1], token[2], token[3]);
 		add_neighbour(host, token[2], in_id, in_fd);
 		if(strcmp(host->self.id, token[1])==0)
-			printf("%s\n",message);
+			printf("%s",message);
 		else{
 			int fd=search_neighbour(host,token[1]);
 			if(fd!=-1)

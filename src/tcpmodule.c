@@ -39,7 +39,7 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 	char *buffer=(char*)malloc(128*sizeof(char));
 	memset(buffer, '\0', 128*sizeof(char));
 	char* token[4]={NULL};
-	printf("%s %s\n",id,bootid);
+//	printf("%s %s\n",id,bootid);
 	//printf("ENTREI NO DJOIN\n");
 	node->self.id=id;	
 	node->net=net;
@@ -60,19 +60,19 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 		node->external.id=bootid;
 		node->is_connected=true;
 		node->TCPsocket=setTCP_server(node->self.TCPport);
-		printf("A sair do djoin\n");
+//		printf("A sair do djoin\n");
 		return;
 	}
 
 	fd=socket(AF_INET,SOCK_STREAM,0); //TCP socket
-	printf("%d\n", fd);
+//	printf("%d\n", fd);
 	if (fd==-1)
 		exit(1); //error
 	memset(&hints,0,sizeof hints);
 	hints.ai_family=AF_INET; //IPv4
 	hints.ai_socktype=SOCK_STREAM; //TCP socket
 	errcode=getaddrinfo(bootIP,bootTCP,&hints,&res);
-	printf("Vou ligar-me ao %s %s\n", bootIP, bootTCP);
+	printf("[INFO]:Connecting to %s at port %s\n", bootIP, bootTCP);
 
 	if(errcode!=0){
 		printf("[ERROR]: Something went wrong :/ ABORTING!\n");
@@ -83,7 +83,7 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 		if(!node->is_connected)
 			node->TCPsocket=setTCP_server(node->self.TCPport);
 		n=connect(fd,res->ai_addr,res->ai_addrlen);
-		printf("Connect sucessfully!\n");
+//		printf("Connect sucessfully!\n");
 		if(n==-1){
 			printf("ERROR: Cannot Connect to node or network. Please clear this network or choose a new one.\n");
 			node->is_connected=true;
@@ -94,17 +94,15 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 		memset(buffer, '\0', 128*sizeof(char));
 		sprintf(buffer,"NEW %s %s %s\n",node->self.id, node->self.IP ,node->self.TCPport);
 		n=write(fd, buffer, strlen(buffer));
-		printf("SENT: %s\n", buffer);
+//		printf("SENT: %s\n", buffer);
 		
 		if(n==-1)
-			printf("falhei a enviar as merdas foda-se\n");
-			///*error*/exit(1);
+			exit(1);
 
 		memset(buffer, '\0', 128*sizeof(char));
 		n=read(fd,buffer,128);
 		
 		while(buffer[strlen(buffer)-1]!='\n'){
-			printf("entrei no buffer mau\n");
 			if(n==0||n==-1||(strcmp(buffer,"\0")==0))
 				break;
 			else
@@ -115,15 +113,14 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 		}
 
 		if(n==-1)
-			printf("falhei na linha 114\n");
-			///*error*/exit(1);
+			/*error*/exit(1);
 		if(n==0 || (strcmp(buffer,"\0")==0)){
 			printf("ERROR: Cannot Connect to node or network. Please clear this network or choose a new one.\n");
 			node->is_connected=true;
 			leave(node);
 			return;
 		}
-		printf("RECEIVED: %s\n",buffer);
+//		printf("RECEIVED: %s\n",buffer);
 		/*processar EXTERN*/
 		i=0;
 		buffer=strtok(buffer,"\n");
@@ -140,7 +137,7 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 			return;
 
 		}
-	printf("I got this: %s %s %s\n", token[1], token[2], token[3]);	
+//	printf("I got this: %s %s %s\n", token[1], token[2], token[3]);	
 	node->backup.id=token[1];
 	node->backup.IP=token[2];
 	node->backup.TCPport=token[3];
@@ -154,7 +151,7 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 	node->external.id=bootid;
 	add_neighbour(node, bootid, bootid,fd);
 	node->is_connected=true;
-	printf("A sair do djoin\n");
+//	printf("A sair do djoin\n");
 
 	return;
 
