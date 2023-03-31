@@ -242,6 +242,11 @@ void proc_extern(netnode *host){
 			host->interns=host->interns->brother;
 			sprintf(message, "EXTERN %s %s %s\n", host->external.id, host->external.IP, host->external.TCPport);
 			add_neighbour(host, host->external.id,host->external.id,host->external.fd);
+			aux=host->interns;
+			while(aux!=NULL){
+				add_neighbour(host, aux->id, aux->id, aux->fd);
+				aux=aux->brother;
+			}
 			write(host->external.fd, message, strlen(message)); /*anchor is now its own backup*/
 			usleep(250);
 			//free(aux); /*better free here*/ /*its no longer an intern*/
