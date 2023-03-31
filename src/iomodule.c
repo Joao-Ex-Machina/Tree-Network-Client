@@ -250,7 +250,7 @@ void proc_extern(netnode *host){
 				add_neighbour(host, aux->id, aux->id, aux->fd);
 				aux=aux->brother;
 			}
-			write(host->external.fd, message, strlen(message)); /*anchor is now its own backup*/
+		//	write(host->external.fd, message, strlen(message)); /*anchor is now its own backup*/
 			usleep(250);
 			//free(aux); /*better free here*/ /*its no longer an intern*/
 		}

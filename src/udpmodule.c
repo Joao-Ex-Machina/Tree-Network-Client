@@ -152,7 +152,7 @@ bool UDPreg(netnode *host, char *net, char *id,char* regIP, char* regUDP){
 	printf("entrei no registo\n");
 	while (regflag==0){
 		printf("UDP socket:%d\n",host->UDPsocket);
-		sprintf(message,"REG %s %2d %s %s\n", net, id_int, host->self.IP, host->self.TCPport);
+		sprintf(message,"REG %s %02d %s %s\n", net, id_int, host->self.IP, host->self.TCPport);
 		
 		//printf("%s %d\n", buffer, strlen(buffer));
 		printf("%s",id);
