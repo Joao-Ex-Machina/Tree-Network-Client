@@ -8,7 +8,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
-
+#include <ctype.h>
 void proc_stdin(char* buffer, netnode *host){
 	int n;
 	char* buffer2 = strdup(buffer); // dup buffer to avoid writing on top of other data
@@ -47,6 +47,10 @@ void proc_stdin(char* buffer, netnode *host){
 			return;
 		}
 //		printf("okay!\n");
+		if(!is_number(token[1])||!is_number(token[2])){
+			printf("[FAULT]:WRONG FORMAT ON COMMAND\n");
+			return;
+		}
 		for(n=1; n<3;n++){
 			if(token[n]==NULL || (token[n]!=NULL && strcmp(token[n],"\0"))==0){
 				printf("FAULT[001]: MISSING ARGUMENTS FOR COMMAND\n");
@@ -96,7 +100,10 @@ void proc_stdin(char* buffer, netnode *host){
 		return;
 	}
 	else if (strcmp(token[0], "get")==0) {
-		query_content(host, token[1], host->self.id, token[2],-1);
+		if(is_number(token[1]))
+			query_content(host, token[1], host->self.id, token[2],-1);
+		else
+			printf("[FAULT]: WRONG FORMAT ON COMMAND\n");
 		return;
 	
 	}
@@ -216,7 +223,7 @@ void proc_extern(netnode *host){
 				break;
 			else
 				n=read(host->external.fd,buffer,128);
-			if(n>=128)
+			if(n>=127)
 				break;
 			sleep(1);	
 		}
@@ -316,7 +323,7 @@ entry* proc_intern(netnode *host, entry *intern, entry *prev){
 	
 	bool first=false;
 	
-	if(!(n==0||n==-1||(strcmp(buffer,"\0")==0))){ /*intern left*/
+	if(!(n==0||n==-1||(strcmp(buffer,"\0")==0))){ /*intern hasn't yet left, but sending a incomplete package*/
 			
 		while(buffer[strlen(buffer)-1]!='\n'){
 			if(n==0||n==-1||(strcmp(buffer,"\0")==0))
@@ -324,7 +331,7 @@ entry* proc_intern(netnode *host, entry *intern, entry *prev){
 			else
 				n=read(intern->fd,buffer,128);
 			
-			if(n>=128)
+			if(n>=127)
 				break;
 			sleep(1);	
 		}
@@ -376,8 +383,9 @@ void proc_contact(netnode *host, char *buffer, char *in_id, int in_fd){
 	entry *aux=host->interns;
 	char *message=(char*)calloc(1,128*sizeof(char));
 	int i=0;	
-	char *token[4];
-	// printf("%s",buffer);
+	char *token[4]={NULL};
+	char temp[3];
+	printf("CONTACT: %s\n",buffer);
 	buffer=strtok(buffer,"\n");
 	token[i]=strtok(buffer, " ");	
 	while(token[i]!=NULL){
@@ -389,7 +397,11 @@ void proc_contact(netnode *host, char *buffer, char *in_id, int in_fd){
 
 	if(strcmp(token[0], "QUERY")==0){
 	//	printf("Eu sou o %s e tenho que contactar o %s \n", host->self.id, token[1]);
-		add_neighbour(host, token[2], in_id, in_fd);
+		printf("I was to add this guy:%s\n",token[2]);
+		sprintf(temp,"%s", token[2]);
+		sprintf(token[2], "%s",temp);
+		if(is_number(token[2]))
+			add_neighbour(host, token[2], in_id, in_fd);
 		if(strcmp(host->self.id, token[1])==0)
 			search_content(host, token[1], token[2], token[3]);
 		else
@@ -403,6 +415,8 @@ void proc_contact(netnode *host, char *buffer, char *in_id, int in_fd){
 			return;
 		}
 		aux=host->interns;
+		sprintf(temp,"%s", token[1]);
+		sprintf(token[1], "%s",temp);
 		remove_routing(host, token[1]);
 		sprintf(message, "WITHDRAW %s\n", token[1]);
 		while(aux!=NULL){
@@ -411,25 +425,44 @@ void proc_contact(netnode *host, char *buffer, char *in_id, int in_fd){
 			aux=aux->brother;
 		}
 		if((host->external.fd)!=in_fd)
-			write(aux->fd,message,sizeof(message));
+			write(host->external.fd,message,sizeof(message));
 		free(message);
 		return;		
 	}
 
 	else if((strcmp(token[0], "CONTENT")==0)||(strcmp(token[0], "NOCONTENT")==0)){ 
 		sprintf(message, "%s %s %s %s\n", token[0], token[1], token[2], token[3]);
-		add_neighbour(host, token[2], in_id, in_fd);
-		if(strcmp(host->self.id, token[1])==0)
+		if(is_number(token[2]))	
+			add_neighbour(host, token[2], in_id, in_fd);
+		if(strcmp(host->self.id, token[1])==0){
 			printf("%s",message);
+			fflush(stdout);
+		}
 		else{
 			int fd=search_neighbour(host,token[1]);
-			if(fd!=-1)
-				write(fd, message, strlen(message));
+			if(fd!=-1){
+				if(fd!=in_fd)
+					write(fd, message, strlen(message));
+			}
+			else
+				printf("[FAULT]: ROGUE CONTENT MESSAGE DETECTED. IGNORING....\n");
+			
 		}
-		
 	}
 	else {
 		printf("[INFO]: Unknown Contact\n");
 		return;
 	}
+}
+
+bool is_number(const char* str) {
+   int i = 0;
+
+   // Check for digits
+   for (; str[i] != '\0'; i++) {
+      if (!isdigit(str[i]))
+         return 0;
+   }
+
+   return 1;
 }

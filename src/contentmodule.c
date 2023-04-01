@@ -8,7 +8,7 @@ void create_content(netnode *host, char* message){
 	struct container *aux=host->content_list, *aux2=host->content_list;
 //	printf("Vou criar um conteúdo chamado %s", message);
 	if(aux==NULL){
-		host->content_list=malloc(sizeof(container));
+		host->content_list=calloc(1,sizeof(container));
 		aux=host->content_list;
 	}
 	else{
@@ -21,7 +21,7 @@ void create_content(netnode *host, char* message){
 			aux=aux->next;
 		}
 
-		aux=(container*)malloc(sizeof(container));
+		aux=(container*)calloc(1,sizeof(container));
 		if(aux2 != aux){
 			if(aux2!=NULL)
 				aux2->next=aux;
@@ -83,8 +83,11 @@ void query_content(netnode *host, char *dest, char *origin, char * query, int in
 			aux=aux->next;
 		}
 	}
-	else
-		write (fd, message, strlen(message));
+
+	else{
+		if(fd!=in_fd)
+			write (fd, message, strlen(message));
+	}
 	free(message);
 	return;
 }
@@ -92,7 +95,7 @@ void query_content(netnode *host, char *dest, char *origin, char * query, int in
 void search_content(netnode *host, char *dest, char *origin, char *query){
 	struct container *aux=host->content_list;
 	bool query_exists=false;
-	char *message=(char*)malloc(128*sizeof(char));
+	char *message=(char*)calloc(1,128*sizeof(char));
 	while(aux!=NULL){
 		if(strcmp(query, aux->content)==0){
 			query_exists=true;
@@ -119,6 +122,9 @@ void search_content(netnode *host, char *dest, char *origin, char *query){
 }
 
 void add_neighbour(netnode *host, char *dest, char *neighbour, int fd){
+	printf("add:%s %s\n", dest, neighbour);
+	char *dest_temp;
+	dest_temp=strdup(dest);
 	struct routing_entry *aux=host->routing_list, *aux2=host->routing_list;
 	//printf("Vamos começar a adicionar routes\n");
 	if (aux==NULL){
@@ -139,11 +145,12 @@ void add_neighbour(netnode *host, char *dest, char *neighbour, int fd){
 	}
 	
 	aux=(routing_entry *)calloc(1,sizeof(routing_entry));
-	aux->dest=dest;
+	aux->dest=dest_temp;
 	aux->neighbour=neighbour;
 	aux->fd=fd;
 	aux2->next=aux;
 	aux->next=NULL;
+	printf("add:%s %s\n", dest, neighbour);
 	return;
 
 }
@@ -161,7 +168,7 @@ void remove_routing(netnode *host, char *candidate){
 			}
 			if(aux!=NULL)
 				//free(aux);
-			aux=NULL;
+				aux=NULL;
 
 		}
 
@@ -175,6 +182,8 @@ void remove_routing(netnode *host, char *candidate){
 void clear_routing(netnode *host){
 	entry *aux3=host->interns;
 	bool first=true;
+	struct routing_entry *aux=host->routing_list, *aux2=host->routing_list;
+
 	if(!host->is_connected){
 		printf("[INFO]: Must be connect to a network to clear routing");
 		return;
@@ -182,7 +191,6 @@ void clear_routing(netnode *host){
 	if(host->routing_list==NULL)
 		return;
 
-	struct routing_entry *aux=host->routing_list, *aux2=host->routing_list;
 	while(aux!=NULL){
 		if(first==true){
 			aux2=host->routing_list->next;
@@ -217,7 +225,7 @@ void show_routing(netnode *host){
 		return;
 	}
 	printf("--[START OF ROUTING LIST]--\n");
-	printf("---[Destiny | Neighbour]---\n");
+	printf("-[Destiny | Neighbour]->FD-\n");
 	while(aux!=NULL){
 		printf("[%s | %s]->%d\n", aux->dest, aux->neighbour, aux->fd);
 		aux=aux->next;

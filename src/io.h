@@ -13,5 +13,6 @@ void host_exit(netnode *host);
 void proc_extern(netnode *host);
 entry* proc_intern(netnode *host, entry *intern, entry *prev);
 void proc_contact(netnode *host, char *buffer, char *in_id, int in_fd);
+bool is_number(const char* str);
 #endif
 
