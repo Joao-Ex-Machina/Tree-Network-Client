@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------------------------------+
+| iomodule.c             | Processing functions for keyboard input (stdin) and nodal (internal and     |
+|                        | external) messages and actions.                                             |
+|                        |                                                                             |
++------------------------------------------------------------------------------------------------------+
+| Authors: Joao Barreiros C. Rodrigues nº99968, Jorge Miguel Monteiro Contente nº102143                |
+|          LEEC-IST                                                                                    |
+| Date: March-April 2023                                                                               |
++-----------------------------------------------------------------------------------------------------*/
 #include "io.h"
 #include "netstruct.h"
 #include "tcp.h"
@@ -217,7 +226,7 @@ void proc_extern(netnode *host){
 	char *buffer2=strdup(buffer);
 
 	if(!(n==0 || n==-1||(strcmp(buffer,"\0")==0))){
-		printf("Bugged Buffer:%s de tamanho %ld \n",buffer, strlen(buffer));
+		//printf("Bugged Buffer:%s de tamanho %ld \n",buffer, strlen(buffer));
 		while(buffer[strlen(buffer)-1]!='\n'){
 			if(n==0||n==-1||(strcmp(buffer,"\0")==0))
 				break;
@@ -396,8 +405,6 @@ void proc_contact(netnode *host, char *buffer, char *in_id, int in_fd){
 	}
 
 	if(strcmp(token[0], "QUERY")==0){
-	//	printf("Eu sou o %s e tenho que contactar o %s \n", host->self.id, token[1]);
-		printf("I was to add this guy:%s\n",token[2]);
 		sprintf(temp,"%s", token[2]);
 		sprintf(token[2], "%s",temp);
 		if(is_number(token[2]))

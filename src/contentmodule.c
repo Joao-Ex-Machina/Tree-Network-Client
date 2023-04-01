@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------------------------------+
+| contentmodule.c        | Functions for content management.                                           |
+|                        | Includes routing managament procedures.                                     |
+|                        |                                                                             |
++------------------------------------------------------------------------------------------------------+
+| Authors: Joao Barreiros C. Rodrigues nº99968, Jorge Miguel Monteiro Contente nº102143                |
+|          LEEC-IST                                                                                    |
+| Date: March-April 2023                                                                               |
++-----------------------------------------------------------------------------------------------------*/
 #include "content.h"
 #include "netstruct.h"
 #include <stdio.h>
@@ -122,7 +131,7 @@ void search_content(netnode *host, char *dest, char *origin, char *query){
 }
 
 void add_neighbour(netnode *host, char *dest, char *neighbour, int fd){
-	printf("add:%s %s\n", dest, neighbour);
+//	printf("add:%s %s\n", dest, neighbour);
 	char *dest_temp;
 	dest_temp=strdup(dest);
 	struct routing_entry *aux=host->routing_list, *aux2=host->routing_list;
@@ -150,7 +159,7 @@ void add_neighbour(netnode *host, char *dest, char *neighbour, int fd){
 	aux->fd=fd;
 	aux2->next=aux;
 	aux->next=NULL;
-	printf("add:%s %s\n", dest, neighbour);
+//	printf("add:%s %s\n", dest, neighbour);
 	return;
 
 }

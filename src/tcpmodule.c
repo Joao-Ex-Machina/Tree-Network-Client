@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------------------------------+
+| tcpmodule.c            | Main function related with TCP connection management.                       |
+|                        | Includes listen socket init, join routines and handshake routine.           |
+|                        |                                                                             |
++------------------------------------------------------------------------------------------------------+
+| Authors: Joao Barreiros C. Rodrigues nº99968, Jorge Miguel Monteiro Contente nº102143                |
+|          LEEC-IST                                                                                    |
+| Date: March-April 2023                                                                               |
++-----------------------------------------------------------------------------------------------------*/
 #include "netstruct.h"
 #include "tcp.h"
 #include "udp.h"
@@ -22,13 +31,21 @@ int setTCP_server (char *tcp_port){
 	hints.ai_socktype = SOCK_STREAM;	//TCP socket
 	hints.ai_flags = AI_PASSIVE;
 	errcode = getaddrinfo (NULL, tcp_port, &hints, &res);
-	if((errcode) != 0)
-		exit (1);			/*error */
+	if((errcode) != 0){
+		printf("[ERROR]: FATAL SELF-GET ADDRESS INFO ERROR! ABORTING!\n");
+		exit(1);
+	}/*error */
 	n = bind (fd, res->ai_addr, res->ai_addrlen);
-	if(n == -1)
-		exit (1);			/*error */
-	if(listen (fd, 5) == -1)
-		exit (1); /*error */
+	if(n == -1){
+		printf("[ERROR]: SOCKET BIND ERROR! \n Check if socket is already bound or hasn't yet flushed\n");
+		exit(1);
+
+	}
+	/*error */
+	if(listen (fd, 5) == -1){
+		printf("[ERROR]: SOCKET SELF-LISTEN ERROR! \n Check if socket is already bound or hasn't yet flushed\n");
+		exit (1);
+	}
 	return fd;
 }
 

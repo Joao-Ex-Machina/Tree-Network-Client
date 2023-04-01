@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------------------------------+
+| cotmain.c              | Main routine for the cot program (Tree Network Client). Includes inits,     |
+|                        | while (1) routine with select and File descriptor dirty bit set and clear.  |
+|                        |                                                                             |
++------------------------------------------------------------------------------------------------------+
+| Authors: Joao Barreiros C. Rodrigues nº99968, Jorge Miguel Monteiro Contente nº102143                |
+|          LEEC-IST                                                                                    |
+| Date: March-April 2023                                                                               |
++-----------------------------------------------------------------------------------------------------*/
 #include "main.h"
 #include "tcp.h"
 #include "udp.h"

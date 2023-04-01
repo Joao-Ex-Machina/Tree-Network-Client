@@ -1,3 +1,12 @@
+/*-----------------------------------------------------------------------------------------------------+
+| udpmodule.c            | UDP related routines. Includes UDP socket init (connect), server register,  |
+|                        | and server querying of potential nodes to connect to.                       |
+|                        |                                                                             |
++------------------------------------------------------------------------------------------------------+
+| Authors: Joao Barreiros C. Rodrigues nº99968, Jorge Miguel Monteiro Contente nº102143                |
+|          LEEC-IST                                                                                    |
+| Date: March-April 2023                                                                               |
++-----------------------------------------------------------------------------------------------------*/
 #include "netstruct.h"
 #include "udp.h"
 #include <stdio.h>
