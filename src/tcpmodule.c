@@ -36,7 +36,7 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 	int fd=0,errcode=0,i=0;
 	ssize_t n=0;
 	struct addrinfo hints,*res=NULL;
-	char *buffer=(char*)malloc(128*sizeof(char));
+	char *buffer=(char*)calloc(1,128*sizeof(char));
 	memset(buffer, '\0', 128*sizeof(char));
 	char* token[4]={NULL};
 //	printf("%s %s\n",id,bootid);
@@ -44,7 +44,7 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 	node->self.id=id;	
 	node->net=net;
 	for (i=0; i<4; i++)
-		token[i]=(char*)malloc(128*(sizeof(char)));
+		token[i]=(char*)calloc(1,128*(sizeof(char)));
 	//printf("acabei setup\n");
 //	printf("comparei os dois : %d \n", strcmp(id, bootid));
 	if(strcmp(id, bootid)==0){
@@ -161,12 +161,12 @@ int handshake(netnode *host,addrinfo hints, addrinfo *res, sockaddr_in addr,char
 	char* token[4]; /*função*/
 	char message[128];
 	int newfd=0,i=0;
-	char* buffer2 = (char*)malloc(128*sizeof(char)); // dup buffer to avoid writing on top of other data. Will probably fix in another version
+	char* buffer2 = (char*)calloc(1,128*sizeof(char)); // dup buffer to avoid writing on top of other data. Will probably fix in another version
 	netnode* aux=host;
 	entry* aux2=host->interns, *aux3=NULL;
 			//printf("ENTER HANDSHAKE\n");
 			for (i=0; i<4; i++)
-				token[i]=(char*)malloc(128*(sizeof(char)));
+				token[i]=(char*)calloc(1,128*(sizeof(char)));
 			FD_CLR(host->TCPsocket, &rfds);
 			socklen_t addrlen = sizeof (addr);
 			if ((newfd = accept (host->TCPsocket, (struct sockaddr*)&addr, &addrlen)) == -1)

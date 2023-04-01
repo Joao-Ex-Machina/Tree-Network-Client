@@ -217,7 +217,7 @@ void proc_extern(netnode *host){
 	char *buffer2=strdup(buffer);
 
 	if(!(n==0 || n==-1||(strcmp(buffer,"\0")==0))){
-
+		printf("Bugged Buffer:%s de tamanho %ld \n",buffer, strlen(buffer));
 		while(buffer[strlen(buffer)-1]!='\n'){
 			if(n==0||n==-1||(strcmp(buffer,"\0")==0))
 				break;
@@ -232,11 +232,11 @@ void proc_extern(netnode *host){
 	if(n==0 || n==-1||(strcmp(buffer,"\0")==0)){
 	/*extern disconected*/
 	remove_routing(host, host->external.id);
+	sprintf(message, "WITHDRAW %s\n", host->external.id);
 	while(aux2!=NULL){
-		sprintf(message, "WITHDRAW %s\n", host->external.id);
 		write(aux2->fd, message, strlen(message));
 		aux2=aux2->next;
-		usleep(250);
+		usleep(2500);
 
 	}
 
@@ -258,7 +258,7 @@ void proc_extern(netnode *host){
 				aux=aux->brother;
 			}
 			write(host->external.fd, message, strlen(message)); /*anchor is now its own backup*/		 /*Fail-safe*/
-			usleep(250);
+			usleep(2500);
 			//free(aux); /*better free here*/ /*its no longer an intern*/
 		}
 		else{
@@ -281,7 +281,7 @@ void proc_extern(netnode *host){
 		}	
 		free(buffer);
 		free(message);
-		usleep(250);
+		usleep(2500);
 		return;
 	}
 	else{
@@ -346,9 +346,9 @@ entry* proc_intern(netnode *host, entry *intern, entry *prev){
 			//free(intern);
 		else
 			first=true;
-		
+
+		sprintf(message, "WITHDRAW %s\n", intern->id);
 		while(aux!=NULL){
-			sprintf(message, "WITHDRAW %s\n", intern->id);
 			if((strcmp(aux->id, intern->id)!=0))
 				write(aux->fd, message, strlen(message));
 			aux=aux->brother;
@@ -419,13 +419,14 @@ void proc_contact(netnode *host, char *buffer, char *in_id, int in_fd){
 		sprintf(token[1], "%s",temp);
 		remove_routing(host, token[1]);
 		sprintf(message, "WITHDRAW %s\n", token[1]);
+		printf("%s", message);
 		while(aux!=NULL){
 			if((aux->fd)!=in_fd)
-				write(aux->fd,message,sizeof(message));
+				write(aux->fd,message,strlen(message));
 			aux=aux->brother;
 		}
 		if((host->external.fd)!=in_fd)
-			write(host->external.fd,message,sizeof(message));
+			write(host->external.fd,message,strlen(message));
 		free(message);
 		return;		
 	}
@@ -450,7 +451,7 @@ void proc_contact(netnode *host, char *buffer, char *in_id, int in_fd){
 		}
 	}
 	else {
-		printf("[INFO]: Unknown Contact\n");
+		printf("[INFO]: Unknown Contact. Discarding...\n");
 		return;
 	}
 }

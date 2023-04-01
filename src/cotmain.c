@@ -62,6 +62,7 @@ int main (int argc, char *argv[]){
 	host->external.IP=NULL;
 	host->external.fd=-1;
 	host->interns=NULL;
+	host->content_list=NULL;
 	host->routing_list=NULL;	
 	/*SOCKET INIT*/
 	//printf("Socket TCP: %d\n", host->TCPsocket);

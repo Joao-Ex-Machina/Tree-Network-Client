@@ -32,7 +32,7 @@ int UDPconnect(char* regIP, char* regUDP){
 }
 
 entry* UDPquery (netnode *host, char *net,char* regIP, char* regUDP){
-	entry *data=(entry*)malloc(sizeof(entry));
+	entry *data=(entry*)calloc(1,sizeof(entry));
 	struct timeval timeout;
 	timeout.tv_sec = 5;
 	timeout.tv_usec = 0;
@@ -40,16 +40,16 @@ entry* UDPquery (netnode *host, char *net,char* regIP, char* regUDP){
 		printf("ERROR[000]: Out of memory, closing...");
 		exit(1);
 	}
-	data->IP=(char*)malloc(16*sizeof(char));
-	data->id=(char*)malloc(4*sizeof(char));
-	data->TCPport=(char*)malloc(6*sizeof(char));
-	char *buffer=(char*)malloc(128*sizeof(char));
+	data->IP=(char*)calloc(1,16*sizeof(char));
+	data->id=(char*)calloc(1,4*sizeof(char));
+	data->TCPport=(char*)calloc(1,6*sizeof(char));
+	char *buffer=(char*)calloc(1,3000*sizeof(char));
 	char *connections[99];
 	for (int i=0; i<99; i++){ /*HAVE TO FREE LATER*/
-		connections[i]=(char*)malloc(128*sizeof(char));
+		connections[i]=(char*)calloc(1,40*sizeof(char));
 	}
 
-	char *buffercontrol=(char*)malloc(128*sizeof(char));
+	char *buffercontrol=(char*)calloc(1,40*sizeof(char));
  	char *chosen_buffer;
 	struct addrinfo hints={.ai_family = AF_INET, .ai_socktype = SOCK_STREAM};
 	struct addrinfo *res;
@@ -70,7 +70,7 @@ entry* UDPquery (netnode *host, char *net,char* regIP, char* regUDP){
         	printf("[ERROR]: Connection to server timedout\n");
         	return NULL;
     	}
-	err=recvfrom(fd, buffer, 128,0,(struct sockaddr*)&addr, &addrlen);
+	err=recvfrom(fd, buffer, 3000,0,(struct sockaddr*)&addr, &addrlen);
 	if (err==-1){
 		printf("[ERROR]: Connection to server timedout. Try again later.\n");
         	return NULL;
@@ -83,7 +83,7 @@ entry* UDPquery (netnode *host, char *net,char* regIP, char* regUDP){
 			if (n > 99)
 				break;
 			n++;
-
+			
 			connections[n]=strtok(NULL, "\n");
 				//free(aux);
 		}
