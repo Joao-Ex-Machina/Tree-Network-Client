@@ -32,7 +32,7 @@ void create_content(netnode *host, char* message){
 
 		aux=(container*)calloc(1,sizeof(container));
 		if(aux2 != aux){
-			if(aux2!=NULL)
+			if(aux2!=NULL) /*cycle to the end of the content list*/
 				aux2->next=aux;
 		}
 	}
@@ -135,9 +135,7 @@ void add_neighbour(netnode *host, char *dest, char *neighbour, int fd){
 	char *dest_temp;
 	dest_temp=strdup(dest);
 	struct routing_entry *aux=host->routing_list, *aux2=host->routing_list;
-	//printf("Vamos começar a adicionar routes\n");
-	if (aux==NULL){
-		//printf("Adicionar o primeiro bro\n");
+	if (aux==NULL){ /*first entry*/
 		host->routing_list=(routing_entry *)calloc(1,sizeof(routing_entry));
 		aux=host->routing_list;
 		aux->dest=dest;
@@ -214,6 +212,7 @@ void clear_routing(netnode *host){
 		aux=aux2;
 	}
 	printf("[INFO]: Routing cleared! Reloading external and internal routes\n");
+	/*Reload internal and external routes to ensure good functioning*/
 	add_neighbour(host, host->external.id, host->external.id, host->external.fd);
 	while(aux3!=NULL){
 		add_neighbour(host, aux3->id, aux3->id, aux3->fd);
@@ -247,7 +246,7 @@ int search_neighbour(netnode *host, char *dest){
 	routing_entry *aux=host->routing_list;
 	int fd=-1;
 	while(aux!=NULL){
-		if(strcmp(dest, aux->dest)==0){
+		if(strcmp(dest, aux->dest)==0){ /*Search for and entry for the desired destiny*/
 			fd=aux->fd;
 			break;
 		}

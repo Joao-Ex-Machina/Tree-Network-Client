@@ -62,8 +62,6 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 	node->net=net;
 	for (i=0; i<4; i++)
 		token[i]=(char*)calloc(1,128*(sizeof(char)));
-	//printf("acabei setup\n");
-//	printf("comparei os dois : %d \n", strcmp(id, bootid));
 	if(strcmp(id, bootid)==0){
 		printf("INFO[000]: SELF CONNECTION\n");
 		bootIP=node->self.IP;
@@ -97,7 +95,8 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 	}
 
 	if (strcmp(id, bootid)!=0){
-		if(!node->is_connected)
+		if(!node->is_connected)/*ESSENTIAL! WITHOUT THIS IF THE PROGRAM WILL LEAVE ON BACKUP THANKS TO THE SOCKET*/
+					/*BEING BOUND TWICE!!*/
 			node->TCPsocket=setTCP_server(node->self.TCPport);
 		n=connect(fd,res->ai_addr,res->ai_addrlen);
 //		printf("Connect sucessfully!\n");
@@ -239,7 +238,7 @@ int handshake(netnode *host,addrinfo hints, addrinfo *res, sockaddr_in addr,char
 				aux->external.fd=newfd;
 
 			}
-			else{
+			else{ /*Pipe info into a entry for the intern list*/
 				if(aux2==NULL){
 					aux2=(entry*)malloc(sizeof(entry));
 					host->interns=aux2;
@@ -262,14 +261,14 @@ int handshake(netnode *host,addrinfo hints, addrinfo *res, sockaddr_in addr,char
 				aux2->brother=NULL;
 			}
 
-			add_neighbour(host, token[1], token[1],newfd);
+			add_neighbour(host, token[1], token[1],newfd); /*Add to known routes*/
 			sprintf(message, "EXTERN %s %s %s\n", host->external.id, host->external.IP, host->external.TCPport);/*acaba aqui*/
 			write(newfd, message, strlen(message));
 			printf("[INFO]: New connection was added!\n");
 			return newfd;
 }
 
-bool join (netnode *host, char *net, char *id){
+bool join (netnode *host, char *net, char *id){ /*Register to net, Query nodes in the net. Join one of the nodes*/
 	entry* data=NULL;
 	printf("Net: %s\n", net);
 	
@@ -338,5 +337,6 @@ bool leave(netnode *host){
 	host->TCPsocket=-1;
 	host->interns=NULL;
 	host->routing_list=NULL;
+	printf("[INFO]:Left network sucessfully!\n");
 	return 0;
 }

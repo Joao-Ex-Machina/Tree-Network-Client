@@ -22,8 +22,6 @@ void proc_stdin(char* buffer, netnode *host){
 	int n;
 	char* buffer2 = strdup(buffer); // dup buffer to avoid writing on top of other data
 	char* token[6];
-//	for (n=0; n<6; n++)
-//		token[n]=(char*)calloc(1,128*(sizeof(char)));
 	n=0;
 	buffer=strtok(buffer2,"\n");
 	token[n]=strtok(buffer2, " ");
@@ -36,20 +34,6 @@ void proc_stdin(char* buffer, netnode *host){
 			//free(aux);
 	}
 	n=0;
-/*	while(n<6){
-		if(token[n]!= NULL){
-
-			printf(token[n]);
-			printf("\n");
-			n++;
-		
-		}
-		else{
-			break;
-		
-		}
-	}*/
-
 	if (strcmp(token[0], "join") == 0){
 		if(host->is_connected){
 			printf("FAULT: You are already connected to a network. Please leave your network before re-connecting\n");
@@ -80,11 +64,6 @@ void proc_stdin(char* buffer, netnode *host){
 		for(n=1; n<6;n++){
 			if(token[n]==NULL || (token[n]!=NULL && (strcmp(token[n],"\0")==0))){
 				printf("FAULT[001]: MISSING ARGUMENTS FOR COMMAND\n");
-				/*for (n=0; n<6; n++){
-					if(token[n]!=NULL)
-						free(token[n]);
-				}*/
-
 				return;
 			
 			
@@ -110,7 +89,8 @@ void proc_stdin(char* buffer, netnode *host){
 	}
 	else if (strcmp(token[0], "get")==0) {
 		if(is_number(token[1]))
-			query_content(host, token[1], host->self.id, token[2],-1);
+			query_content(host, token[1], host->self.id, token[2],-1); /*Parts from the host itself so there was no previous input fd*/
+										/*So we set in_fd to -1, which in a normal circumstance should never be a valid fd*/
 		else
 			printf("[FAULT]: WRONG FORMAT ON COMMAND\n");
 		return;
@@ -186,6 +166,7 @@ void host_exit(netnode *host){
 		aux=aux2;
 	}
 	free(host);
+	printf("[INFO]: EXIT SUCESSFUL!\n");
 	exit(0);
 }
 
@@ -224,9 +205,8 @@ void proc_extern(netnode *host){
 	entry *aux=host->interns;
 	int n=read(host->external.fd,buffer,128);
 	char *buffer2=strdup(buffer);
-
+	/*READ INCOMPLETE PACKETS!*/
 	if(!(n==0 || n==-1||(strcmp(buffer,"\0")==0))){
-		//printf("Bugged Buffer:%s de tamanho %ld \n",buffer, strlen(buffer));
 		while(buffer[strlen(buffer)-1]!='\n'){
 			if(n==0||n==-1||(strcmp(buffer,"\0")==0))
 				break;
@@ -258,7 +238,7 @@ void proc_extern(netnode *host){
 			host->external.TCPport=host->interns->TCPport;
 			host->external.fd=host->interns->fd;
 			aux=host->interns;
-			host->interns=host->interns->brother;
+			host->interns=host->interns->brother; /*its no longer an intern. Repointing the head to the promoted internal brother*/
 			sprintf(message, "EXTERN %s %s %s\n", host->external.id, host->external.IP, host->external.TCPport);
 			add_neighbour(host, host->external.id,host->external.id,host->external.fd);
 			aux=host->interns;
@@ -266,9 +246,8 @@ void proc_extern(netnode *host){
 				add_neighbour(host, aux->id, aux->id, aux->fd);
 				aux=aux->brother;
 			}
-			write(host->external.fd, message, strlen(message)); /*anchor is now its own backup*/		 /*Fail-safe*/
-			usleep(2500);
-			//free(aux); /*better free here*/ /*its no longer an intern*/
+			write(host->external.fd, message, strlen(message)); /*anchor is now its own backup*/		 
+			usleep(2500); /*Fail-safe to prevent two messages to be sent too fast*/
 		}
 		else{
 			host->external.id=host->self.id; /*no one to anchor, alone again*/
@@ -281,7 +260,7 @@ void proc_extern(netnode *host){
 			host->external.fd=-1;
 
 		}
-		/*spread information*/
+		/*spread new backup information to interns*/
 		sprintf(message, "EXTERN %s %s %s\n", host->external.id, host->external.IP, host->external.TCPport);
 		aux=host->interns;
 		while(aux!=NULL){
@@ -303,7 +282,7 @@ void proc_extern(netnode *host){
 			token[i]=strtok(NULL, " ");
 		}
 	
-		if(strcmp(token[0], "EXTERN")==0){
+		if(strcmp(token[0], "EXTERN")==0){ /*Special message. Intern received instructions to replace backup*/
 			host->backup.id=token[1];
 			host->backup.IP=token[2];
 			host->backup.TCPport=token[3];
@@ -380,7 +359,7 @@ entry* proc_intern(netnode *host, entry *intern, entry *prev){
 		//free(aux); /*so many lost blocks*/
 	}
 	else
-		proc_contact(host, buffer, intern->id, intern->fd);
+		proc_contact(host, buffer, intern->id, intern->fd); /*No special action. Pass to proc_contact to process*/
 
 	free(buffer);
 	free(message);
@@ -393,7 +372,7 @@ void proc_contact(netnode *host, char *buffer, char *in_id, int in_fd){
 	char *message=(char*)calloc(1,128*sizeof(char));
 	int i=0;	
 	char *token[4]={NULL};
-	char temp[3];
+	char temp[3]={'\0'};
 	printf("CONTACT: %s\n",buffer);
 	buffer=strtok(buffer,"\n");
 	token[i]=strtok(buffer, " ");	
@@ -422,7 +401,7 @@ void proc_contact(netnode *host, char *buffer, char *in_id, int in_fd){
 			return;
 		}
 		aux=host->interns;
-		sprintf(temp,"%s", token[1]);
+		sprintf(temp,"%s", token[1]); /*Fail-safe. Without temp there's a tendency to write garbage to the table*/
 		sprintf(token[1], "%s",temp);
 		remove_routing(host, token[1]);
 		sprintf(message, "WITHDRAW %s\n", token[1]);
@@ -430,7 +409,7 @@ void proc_contact(netnode *host, char *buffer, char *in_id, int in_fd){
 		while(aux!=NULL){
 			if((aux->fd)!=in_fd)
 				write(aux->fd,message,strlen(message));
-			aux=aux->brother;
+			aux=aux->brother; /*Missed this line in the first submission*/
 		}
 		if((host->external.fd)!=in_fd)
 			write(host->external.fd,message,strlen(message));
@@ -441,7 +420,7 @@ void proc_contact(netnode *host, char *buffer, char *in_id, int in_fd){
 	else if((strcmp(token[0], "CONTENT")==0)||(strcmp(token[0], "NOCONTENT")==0)){ 
 		sprintf(message, "%s %s %s %s\n", token[0], token[1], token[2], token[3]);
 		if(is_number(token[2]))	
-			add_neighbour(host, token[2], in_id, in_fd);
+			add_neighbour(host, token[2], in_id, in_fd); /*Add node from where the message is from to the known routes*/
 		if(strcmp(host->self.id, token[1])==0){
 			printf("%s",message);
 			fflush(stdout);

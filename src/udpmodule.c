@@ -54,7 +54,7 @@ entry* UDPquery (netnode *host, char *net,char* regIP, char* regUDP){
 	data->TCPport=(char*)calloc(1,6*sizeof(char));
 	char *buffer=(char*)calloc(1,3000*sizeof(char));
 	char *connections[99];
-	for (int i=0; i<99; i++){ /*HAVE TO FREE LATER*/
+	for (int i=0; i<99; i++){ 
 		connections[i]=(char*)calloc(1,40*sizeof(char));
 	}
 
@@ -110,12 +110,6 @@ entry* UDPquery (netnode *host, char *net,char* regIP, char* regUDP){
 	else
 		n--;
 	if(n==0){ //network is empty
-		/*for (int i=0; i<99; i++){
-			if(connections[i]!=NULL)
-				free(connections[i]);
-			
-		}*/
-	
 		data->id=host->self.id;
 		data->IP=host->self.IP;
 		data->TCPport=host->self.TCPport;
@@ -163,9 +157,6 @@ bool UDPreg(netnode *host, char *net, char *id,char* regIP, char* regUDP){
 //		printf("UDP socket:%d\n",host->UDPsocket);
 		sprintf(message,"REG %s %02d %s %s\n", net, id_int, host->self.IP, host->self.TCPport);
 		
-		//printf("%s %d\n", buffer, strlen(buffer));
-//		printf("%s",id);
-//		printf("%s",id);
 		sendto(host->UDPsocket, message,strlen(message),0, res->ai_addr,res->ai_addrlen);
 	//	printf("registei\n");
 		
@@ -177,13 +168,13 @@ bool UDPreg(netnode *host, char *net, char *id,char* regIP, char* regUDP){
     		}
 		n=recvfrom(host->UDPsocket, buffer, 128,0,(struct sockaddr*)&addr, &addrlen);
 		//printf("%d",n);
-//		printf("servidor: %s\n",buffer);
+		//printf("servidor: %s\n",buffer);
 		if((strcmp(buffer, "OKREG")==0)||((buffer[0]=='O')&&(buffer[1]=='K')&&(buffer[2]=='R')&&(buffer[3]=='E')&&(buffer[4]=='G'))){
 			
-//			printf("O Server aceitou\n");
+			//printf("O Server aceitou\n");
 			regflag=1;
 			host->net=net;
-			host->self.id=id;
+			host->self.id=id; /*Save registered id*/
 			free(buffer);
 			printf("[INFO]: Registration sucessful with id %s\n",host->self.id);
 			return 0;
@@ -197,7 +188,7 @@ bool UDPreg(netnode *host, char *net, char *id,char* regIP, char* regUDP){
 
 			}
 			printf("[ERROR]:Connection to server timedout. Try:%d/5\n",tries);
-			timeout.tv_sec=timeout.tv_sec*2;
+			timeout.tv_sec=timeout.tv_sec*2; /*Exponential timer. A bit overkill in try 4 and 5*/
 			timeout.tv_usec=timeout.tv_usec*2;
 			tries++;
 		}
