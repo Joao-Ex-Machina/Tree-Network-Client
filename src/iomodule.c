@@ -236,6 +236,7 @@ void proc_extern(netnode *host){
 	}
 	if(n==0 || n==-1||(strcmp(buffer,"\0")==0)){
 	/*extern disconected*/
+	printf("[INFO]: External node (id: %s) disconnected\n.", host->external.id);
 	remove_routing(host, host->external.id);
 	sprintf(message, "WITHDRAW %s\n", host->external.id);
 	while(aux2!=NULL){
@@ -356,6 +357,7 @@ entry* proc_intern(netnode *host, entry *intern, entry *prev){
 		return intern;
 	}
 	if(n==0||n==-1||(strcmp(buffer,"\0")==0)){ /*intern left*/
+		printf("[INFO]: Internal node (id: %s) disconnected\n", intern->id);
 	//	printf("Vou remover o %s", intern->id);
 		if(intern!=host->interns)
 			prev->brother=intern->brother;
