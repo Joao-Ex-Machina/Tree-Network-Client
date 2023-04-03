@@ -214,8 +214,8 @@ void proc_extern(netnode *host){
 	}
 
 	if(!(n==0 || n==-1||(strcmp(buffer,"\0")==0))){
-		sleep(1);
 		while(buffer[strlen(buffer)-1]!='\n'){
+			sleep(1);
 			if(n==old_n||n==-1||(strcmp(buffer,"\0")==0)){
 				if(n==old_n)
 					unreacheable=true;
@@ -226,7 +226,7 @@ void proc_extern(netnode *host){
 				n=read(host->external.fd,buffer,128);
 			}
 			if(n>=127)
-				break;	
+				break;
 		}
 	}
 
@@ -401,7 +401,7 @@ void proc_contact(netnode *host, char *buffer, char *in_id, int in_fd){
 	int i=0;	
 	char *token[4]={NULL};
 	char temp[3]={'\0'};
-	printf("CONTACT: %s\n",buffer);
+	//printf("CONTACT: %s\n",buffer);
 	buffer=strtok(buffer,"\n");
 	token[i]=strtok(buffer, " ");	
 	while(token[i]!=NULL){
@@ -433,7 +433,7 @@ void proc_contact(netnode *host, char *buffer, char *in_id, int in_fd){
 		sprintf(token[1], "%s",temp);
 		remove_routing(host, token[1]);
 		sprintf(message, "WITHDRAW %s\n", token[1]);
-		printf("%s", message);
+	//	printf("%s", message);
 		while(aux!=NULL){
 			if((aux->fd)!=in_fd)
 				write(aux->fd,message,strlen(message));
