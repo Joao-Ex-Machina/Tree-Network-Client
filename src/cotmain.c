@@ -84,7 +84,7 @@ int main (int argc, char *argv[]){
 		//printf("entrei no while\n");
 		
 		FD_SET(0,&(host->rfds)); /*stdin*/
-		maxfd=2; /*include stdout and stderr*/
+		maxfd=0;
 
 		/*Check and set dirty bits for listening socket and connected nodes*/
 		if(host->TCPsocket!=-1){
@@ -111,7 +111,7 @@ int main (int argc, char *argv[]){
 		}
 		
 		counter =select (maxfd + 1, &(host->rfds), (fd_set *) NULL, (fd_set *) NULL,(struct timeval *) NULL);
-//		printf("counter: %d\n", counter);
+		printf("counter: %d\n", counter);
 		if (counter <= 0){
 			printf("[ERROR]: FATAL--INVALID FD SET! ABORTING!\n");
 			leave(host);

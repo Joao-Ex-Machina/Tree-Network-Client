@@ -292,8 +292,8 @@ bool join (netnode *host, char *net, char *id){ /*Register to net, Query nodes i
 }
 
 bool leave(netnode *host){
-	char message[128]="\0";
-	char servermsg[8]="\0";
+	char message[128]={'\0'};
+	char servermsg[8]={'\0'};
 	struct addrinfo hints={.ai_family = AF_INET, .ai_socktype = SOCK_STREAM};
 	struct addrinfo *res;
  	struct sockaddr_in addr;
@@ -327,9 +327,9 @@ bool leave(netnode *host){
 		free(aux);
 		aux=next;
 	}
-	if((host->external.fd)!=-1)
+	if(((host->external.fd)!=-1) && ((host->external.fd)!=0)) 
 		close(host->external.fd); /*close socket*/
-	if((host->TCPsocket)!=-1)
+	if(((host->TCPsocket)!=-1) && ((host->TCPsocket)!=0))
 		close(host->TCPsocket);
 	host->is_connected=false;
 	host->external.IP=NULL; /*Reset variables to initial state*/
