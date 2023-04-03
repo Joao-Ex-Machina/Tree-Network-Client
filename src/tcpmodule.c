@@ -270,7 +270,7 @@ int handshake(netnode *host,addrinfo hints, addrinfo *res, sockaddr_in addr,char
 
 bool join (netnode *host, char *net, char *id){ /*Register to net, Query nodes in the net. Join one of the nodes*/
 	entry* data=NULL;
-	printf("Net: %s\n", net);
+	//printf("Net: %s\n", net);
 	
 	if(host->is_connected){
 		printf("[FAULT]: You have already joined a network.\n Please use leave before joining a new net\n");

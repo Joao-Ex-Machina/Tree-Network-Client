@@ -111,7 +111,7 @@ int main (int argc, char *argv[]){
 		}
 		
 		counter =select (maxfd + 1, &(host->rfds), (fd_set *) NULL, (fd_set *) NULL,(struct timeval *) NULL);
-		printf("counter: %d\n", counter);
+	//	printf("counter: %d\n", counter);
 		if (counter <= 0){
 			printf("[ERROR]: FATAL--INVALID FD SET! ABORTING!\n");
 			leave(host);
