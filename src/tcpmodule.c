@@ -51,7 +51,8 @@ int setTCP_server (char *tcp_port){
 
 void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netnode* node){
 	int fd=0,errcode=0,i=0;
-	ssize_t n=0;
+	ssize_t n=0, old_n=0;
+	bool unreacheable=false;
 	struct addrinfo hints,*res=NULL;
 	char *buffer=(char*)calloc(1,128*sizeof(char));
 	memset(buffer, '\0', 128*sizeof(char));
@@ -120,18 +121,28 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 		
 		while(buffer[strlen(buffer)-1]!='\n'){
 			sleep(1);
+			old_n=n;
+			n=read(fd,buffer,128);
+			if(n==old_n){
+				unreacheable=true;
+				break;
+			}
 			if(n==0||n==-1||(strcmp(buffer,"\0")==0))
 				break;
-			else
+			else{
+				old_n=n;
 				n=read(fd,buffer,128);
+
+			}
 			if(n>=128)
 				break;	
 		}
 
 		if(n==-1)
 			/*error*/exit(1);
-		if(n==0 || (strcmp(buffer,"\0")==0)){
+		if(n==0 || (strcmp(buffer,"\0")==0) || unreacheable==true){
 			printf("ERROR: Cannot Connect to node or network. Please clear this network or choose a new one.\n");
+			unreacheable=false;
 			node->is_connected=true;
 			leave(node);
 			return;

@@ -208,11 +208,6 @@ void proc_extern(netnode *host){
 	bool unreacheable=false;
 	/*READ INCOMPLETE PACKETS!*/
 	old_n=n;
-	if(n==0){
-		usleep(500000);
-		n=read(host->external.fd,buffer,128); /*Make sure extern has left*/
-	}
-
 	if(!(n==0 || n==-1||(strcmp(buffer,"\0")==0))){
 		while(buffer[strlen(buffer)-1]!='\n'){
 			sleep(1);
@@ -327,10 +322,6 @@ entry* proc_intern(netnode *host, entry *intern, entry *prev){
 	int n=read(intern->fd,buffer,128), old_n=0;
 	
 	bool first=false, unreacheable=false;
-	if(n==0){
-		usleep(500000);
-		n=read(intern->fd,buffer,128);
-	}
 
 	if(!(n==0||n==-1||(strcmp(buffer,"\0")==0))){ /*intern hasn't yet left, but sending a incomplete package*/
 			
