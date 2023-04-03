@@ -119,13 +119,13 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 		n=read(fd,buffer,128);
 		
 		while(buffer[strlen(buffer)-1]!='\n'){
+			sleep(1);
 			if(n==0||n==-1||(strcmp(buffer,"\0")==0))
 				break;
 			else
 				n=read(fd,buffer,128);
 			if(n>=128)
-				break;
-			sleep(1);	
+				break;	
 		}
 
 		if(n==-1)

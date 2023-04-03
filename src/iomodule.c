@@ -155,7 +155,7 @@ void host_exit(netnode *host){
 	container *aux=host->content_list, *aux2=NULL;
 	if(host->is_connected){
 		printf("[INFO]: Host is still connected to a network\n");
-		printf("[INFO]: Will force exit. This will leave the network first.");
+		printf("[INFO]: Will force exit. This will leave the network first.\n");
 		leave(host);
 
 	}
@@ -203,21 +203,37 @@ void proc_extern(netnode *host){
 	routing_entry *aux2=host->routing_list;
 	int i=0;
 	entry *aux=host->interns;
-	int n=read(host->external.fd,buffer,128);
+	int n=read(host->external.fd,buffer,128), old_n=0;
 	char *buffer2=strdup(buffer);
+	bool unreacheable=false;
 	/*READ INCOMPLETE PACKETS!*/
+	old_n=n;
+	if(n==0){
+		usleep(500000);
+		n=read(host->external.fd,buffer,128); /*Make sure extern has left*/
+	}
+
 	if(!(n==0 || n==-1||(strcmp(buffer,"\0")==0))){
+		sleep(1);
 		while(buffer[strlen(buffer)-1]!='\n'){
-			if(n==0||n==-1||(strcmp(buffer,"\0")==0))
+			if(n==old_n||n==-1||(strcmp(buffer,"\0")==0)){
+				if(n==old_n)
+					unreacheable=true;
 				break;
-			else
+			}
+			else{
+				old_n=n;
 				n=read(host->external.fd,buffer,128);
+			}
 			if(n>=127)
-				break;
-			sleep(1);	
+				break;	
 		}
 	}
 
+	if(unreacheable){
+		printf("[FAULT]: Incomplete package received and unable to recover.\n Discarding...");
+		return;
+	}
 	if(n==0 || n==-1||(strcmp(buffer,"\0")==0)){
 	/*extern disconected*/
 	remove_routing(host, host->external.id);
@@ -307,26 +323,38 @@ entry* proc_intern(netnode *host, entry *intern, entry *prev){
 	char *buffer=(char*)calloc(1,128*sizeof(char));
 	char *message=(char*)calloc(1,128*sizeof(char));
 	entry *aux=host->interns;
-	int n=read(intern->fd,buffer,128);
+	int n=read(intern->fd,buffer,128), old_n=0;
 	
-	bool first=false;
-	
+	bool first=false, unreacheable=false;
+	if(n==0){
+		usleep(500000);
+		n=read(intern->fd,buffer,128);
+	}
+
 	if(!(n==0||n==-1||(strcmp(buffer,"\0")==0))){ /*intern hasn't yet left, but sending a incomplete package*/
 			
 		while(buffer[strlen(buffer)-1]!='\n'){
-			if(n==0||n==-1||(strcmp(buffer,"\0")==0))
+			sleep(1);
+			if(n==old_n||n==-1||(strcmp(buffer,"\0")==0)){
+				if(n==old_n)
+					unreacheable=true;
 				break;
-			else
+			}
+			else{
+				old_n=n;
 				n=read(intern->fd,buffer,128);
 			
+			}
 			if(n>=127)
-				break;
-			sleep(1);	
+				break;	
 		}
 
 	
 	}
-
+	if(unreacheable){
+		printf("[FAULT]: Incomplete package received and unable to recover.\n Discarding...");
+		return intern;
+	}
 	if(n==0||n==-1||(strcmp(buffer,"\0")==0)){ /*intern left*/
 	//	printf("Vou remover o %s", intern->id);
 		if(intern!=host->interns)
