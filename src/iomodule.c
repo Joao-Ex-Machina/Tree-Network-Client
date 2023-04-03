@@ -237,7 +237,7 @@ void proc_extern(netnode *host){
 	while(aux2!=NULL){
 		write(aux2->fd, message, strlen(message));
 		aux2=aux2->next;
-		usleep(2500);
+		usleep(50000);
 
 	}
 
@@ -259,7 +259,7 @@ void proc_extern(netnode *host){
 				aux=aux->brother;
 			}
 			write(host->external.fd, message, strlen(message)); /*anchor is now its own backup*/		 
-			usleep(2500); /*Fail-safe to prevent two messages to be sent too fast*/
+			usleep(50000); /*Fail-safe to prevent two messages to be sent too fast*/
 		}
 		else{
 			host->external.id=host->self.id; /*no one to anchor, alone again*/
@@ -281,7 +281,7 @@ void proc_extern(netnode *host){
 		}	
 		free(buffer);
 		free(message);
-		usleep(2500);
+		usleep(50000);
 		return;
 	}
 	else{
