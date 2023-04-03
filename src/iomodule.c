@@ -199,36 +199,54 @@ void show_topology(netnode *host){
 
 void proc_extern(netnode *host){
 	char *buffer=(char*)calloc(1,128*sizeof(char)), *message=(char*)calloc(1,128*sizeof(char));
+	char *buffer3=(char*)calloc(1,128*sizeof(char));
+	int remaining=127;
 	char *token[4]={NULL};
 	routing_entry *aux2=host->routing_list;
 	int i=0;
 	entry *aux=host->interns;
 	int n=read(host->external.fd,buffer,128), old_n=0;
-	char *buffer2=strdup(buffer);
 	bool unreacheable=false;
 	/*READ INCOMPLETE PACKETS!*/
 	old_n=n;
+	remaining=remaining-strlen(buffer);
 	if(!(n==0 || n==-1||(strcmp(buffer,"\0")==0))){
 		while(buffer[strlen(buffer)-1]!='\n'){
 			sleep(1);
-			if(n==old_n||n==-1||(strcmp(buffer,"\0")==0)){
+			old_n=n;
+			n=read(host->external.fd,buffer3,128);
+			
+			remaining=remaining-strlen(buffer3);
+			if(remaining > 0)
+				strcat(buffer, buffer3);
+			else
+				break;
+
+			if(n==old_n||n==-1||(strcmp(buffer3,"\0")==0)){
 				if(n==old_n)
 					unreacheable=true;
 				break;
 			}
 			else{
 				old_n=n;
-				n=read(host->external.fd,buffer,128);
+				n=read(host->external.fd,buffer3,128);
+				remaining=remaining-strlen(buffer3);
+				if(remaining > 0)
+					strcat(buffer, buffer3);
+				else
+					break;
+
 			}
 			if(n>=127)
 				break;
 		}
 	}
-
+	
 	if(unreacheable){
 		printf("[FAULT]: Incomplete package received and unable to recover.\n Discarding...");
 		return;
 	}
+	char *buffer2=strdup(buffer);
 	if(n==0 || n==-1||(strcmp(buffer,"\0")==0)){
 	/*extern disconected*/
 	printf("[INFO]: External node (id: %s) disconnected\n.", host->external.id);
@@ -317,24 +335,40 @@ void proc_extern(netnode *host){
 
 entry* proc_intern(netnode *host, entry *intern, entry *prev){
 	char *buffer=(char*)calloc(1,128*sizeof(char));
+	char *buffer2=(char*)calloc(1,128*sizeof(char));
 	char *message=(char*)calloc(1,128*sizeof(char));
 	entry *aux=host->interns;
 	int n=read(intern->fd,buffer,128), old_n=0;
-	
+	int remaining=127;
 	bool first=false, unreacheable=false;
-
+	remaining=remaining-strlen(buffer);
 	if(!(n==0||n==-1||(strcmp(buffer,"\0")==0))){ /*intern hasn't yet left, but sending a incomplete package*/
 			
 		while(buffer[strlen(buffer)-1]!='\n'){
 			sleep(1);
-			if(n==old_n||n==-1||(strcmp(buffer,"\0")==0)){
+			old_n=n;
+			n=read(intern->fd,buffer2,128);
+			remaining=remaining-strlen(buffer2);
+			if(remaining > 0)
+				strcat(buffer, buffer2);
+			else
+				break;
+			
+
+			if(n==old_n||n==-1||(strcmp(buffer2,"\0")==0)){
 				if(n==old_n)
 					unreacheable=true;
 				break;
 			}
 			else{
 				old_n=n;
-				n=read(intern->fd,buffer,128);
+				n=read(intern->fd,buffer2,128);
+				remaining=remaining-strlen(buffer2);
+				if(remaining > 0)
+					strcat(buffer, buffer2);
+				else
+					break;
+
 			
 			}
 			if(n>=127)

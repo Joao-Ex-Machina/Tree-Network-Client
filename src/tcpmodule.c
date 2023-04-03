@@ -55,8 +55,11 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 	bool unreacheable=false;
 	struct addrinfo hints,*res=NULL;
 	char *buffer=(char*)calloc(1,128*sizeof(char));
+	char *buffer2=(char*)calloc(1,128*sizeof(char));
 	memset(buffer, '\0', 128*sizeof(char));
+	memset(buffer2, '\0', 128*sizeof(char));
 	char* token[4]={NULL};
+	int remaining=127;
 //	printf("%s %s\n",id,bootid);
 	//printf("ENTREI NO DJOIN\n");
 	node->self.id=id;	
@@ -118,11 +121,16 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 
 		memset(buffer, '\0', 128*sizeof(char));
 		n=read(fd,buffer,128);
-		
+		remaining=remaining-strlen(buffer);	
 		while(buffer[strlen(buffer)-1]!='\n'){
 			sleep(1);
 			old_n=n;
-			n=read(fd,buffer,128);
+			n=read(fd,buffer2,128);	
+			remaining=remaining-strlen(buffer2);
+			if(remaining > 0)
+				strcat(buffer, buffer2);
+			else
+				break;
 			if(n==old_n){
 				unreacheable=true;
 				break;
@@ -131,13 +139,17 @@ void djoin (char* net, char* id, char* bootid, char* bootIP, char* bootTCP, netn
 				break;
 			else{
 				old_n=n;
-				n=read(fd,buffer,128);
-
+				n=read(fd,buffer2,128);
+					
+				remaining=remaining-strlen(buffer2);
+				if(remaining > 0)
+					strcat(buffer, buffer2);
+				else
+					break;
 			}
 			if(n>=128)
 				break;	
 		}
-
 		if(n==-1)
 			/*error*/exit(1);
 		if(n==0 || (strcmp(buffer,"\0")==0) || unreacheable==true){
@@ -188,7 +200,9 @@ int handshake(netnode *host,addrinfo hints, addrinfo *res, sockaddr_in addr,char
 	char* token[4]; /*função*/
 	char message[128];
 	int newfd=0,i=0;
-	char* buffer2 = (char*)calloc(1,128*sizeof(char)); // dup buffer to avoid writing on top of other data. Will probably fix in another version
+	int remaining=127;
+	char* buffer2 = (char*)calloc(1,128*sizeof(char));
+	char* buffer3 = (char*)calloc(1,128*sizeof(char));// dup buffer to avoid writing on top of other data. Will probably fix in another version
 	netnode* aux=host;
 	entry* aux2=host->interns, *aux3=NULL;
 			//printf("ENTER HANDSHAKE\n");
@@ -199,12 +213,27 @@ int handshake(netnode *host,addrinfo hints, addrinfo *res, sockaddr_in addr,char
 			if ((newfd = accept (host->TCPsocket, (struct sockaddr*)&addr, &addrlen)) == -1)
 			  return newfd;
 			int n=read(newfd, buffer2, 128);
+			remaining=remaining-strlen(buffer2);
 			if(buffer2[strlen(buffer2)-1]!='\n'){	
+				sleep(1);
+				n=read(newfd, buffer3, 128);	
+				remaining=remaining-strlen(buffer3);
+				if(remaining > 0)
+					strcat(buffer2, buffer3);
+				else
+					n=-1;
 				while(buffer2[strlen(buffer2)-1]!='\n'){
 					if(n==0||n==-1||(strcmp(buffer2,"\0")==0))
 						break;
-					else
-						n=read(newfd,buffer2,128);
+					else{
+						n=read(newfd,buffer3,128);
+							
+						remaining=remaining-strlen(buffer3);
+						if(remaining > 0)
+							strcat(buffer2, buffer3);
+						else
+							break;
+					}
 					if(n>=128)
 						break;
 					sleep(1);	
